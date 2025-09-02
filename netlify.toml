@@ -1,0 +1,17 @@
+[build]
+  base = "dashboard/"
+  publish = "dashboard/dist"
+  command = "cd dashboard && npm install && npm run build"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[dev]
+  command = "cd dashboard && npm run dev"
+  port = 5173
+  publish = "dashboard/dist"
