@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { 
-  Settings, Play, Pause, Send, Save, Database, Rss, Youtube, MessageSquare, 
-  Bot, Gauge, ShieldCheck, KeyRound, ChevronRight, Eye, EyeOff, Link as LinkIcon, 
-  Trash2, Plus, RefreshCw, Calendar, Clock, FileText, CheckCircle2, AlertCircle, 
-  Download, Upload, Globe2 
+  Settings, Play, Pause, Database, Rss, Youtube, 
+  Bot, Gauge, KeyRound, Eye, EyeOff, 
+  Trash2, FileText, CheckCircle2, AlertCircle, 
+  Download, Globe2 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
