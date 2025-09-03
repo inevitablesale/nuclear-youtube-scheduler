@@ -1,7 +1,7 @@
 [build]
   base = "."
   publish = "dashboard/dist"
-  command = "cd dashboard && npm ci && npm run build"
+  command = "cd dashboard && npm ci && npm run build && cd ../netlify && npm ci"
 
 [build.environment]
   NODE_VERSION = "18"
@@ -9,7 +9,7 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["googleapis","axios","xml2js","@netlify/blobs"]
+  external_node_modules = ["googleapis","axios","xml2js","@netlify/blobs","openai"]
 
 # Daily at 9:00 AM America/New_York (13:00 UTC outside DST) — adjust if needed
 [[scheduled.functions]]
