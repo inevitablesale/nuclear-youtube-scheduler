@@ -10,7 +10,7 @@ End-to-end automated YouTube Shorts pipeline with AI-powered content generation 
 - **YouTube Upload**: Automated video uploads with proper metadata and comments
 - **Engagement Boosting**: NuclearSMM integration for views, likes, and comments
 - **Modern Dashboard**: React TypeScript UI for configuration and monitoring
-- **Real-time API**: FastAPI backend with live queue processing and logging
+- **Real-time API**: Netlify Functions with live queue processing and logging
 
 ## 🏗️ Architecture
 
@@ -173,35 +173,7 @@ The dashboard provides real-time monitoring of:
 - Environment variables for sensitive data
 - No hardcoded credentials
 
-## 🚀 Production Deployment
 
-### Backend
-```bash
-# Install production dependencies
-pip install -r requirements.txt
-
-# Run with production server
-uvicorn api_server:app --host 0.0.0.0 --port 8000 --workers 4
-```
-
-### Frontend
-```bash
-# Build for production
-cd dashboard
-npm run build
-
-# Serve static files
-npx serve -s dist -l 3000
-```
-
-### Environment Variables
-```bash
-# Required
-OPENAI_API_KEY=your_openai_api_key
-CREATIFY_API_ID=your_creatify_api_id
-CREATIFY_API_KEY=your_creatify_api_key
-NUCLEAR_API_KEY=your_nuclear_api_key
-```
 
 ## 📝 Notes
 
