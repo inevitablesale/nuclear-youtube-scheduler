@@ -1,11 +1,20 @@
 [build]
   base = "dashboard/"
   publish = "dashboard/dist"
-  command = "npm ci && npm run build"
+  command = "npm ci && npm run build && cd ../netlify && npm ci"
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_FLAGS = "--production=false"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["googleapis", "axios", "xml2js", "openai"]
+
+[[scheduled.functions]]
+  # 9:00 AM America/New_York daily
+  name = "schedule-rss"
+  cron = "0 13 * * *" # UTC equivalent of 9am ET (adjust for DST as needed)
 
 [[redirects]]
   from = "/*"
