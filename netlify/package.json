@@ -4,9 +4,9 @@
   "type": "module",
   "engines": { "node": ">=18" },
   "dependencies": {
-    "@netlify/blobs": "6.4.0",
-    "axios": "^1.7.5",
+    "@netlify/neon": "^0.1.0",
     "googleapis": "^131.0.0",
+    "axios": "^1.7.5",
     "openai": "^4.59.0",
     "xml2js": "^0.6.2"
   }

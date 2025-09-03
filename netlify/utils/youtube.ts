@@ -1,35 +1,23 @@
 import { google } from "googleapis";
 import axios from "axios";
 import fs from "fs/promises";
-import { getStore } from "@netlify/blobs";
+import { getRefreshToken } from "./db";
 
 type Chan = "A"|"B";
 
-async function openOAuthStore() {
-  try {
-    // Works if Blobs is enabled for the site
-    return await getStore("nuclear-oauth-refresh");
-  } catch (e) {
-    // Fallback: use explicit credentials from env
-    const siteID = process.env.NETLIFY_SITE_ID || process.env.SITE_ID;
-    const token = process.env.NETLIFY_API_TOKEN || process.env.NETLIFY_ACCESS_TOKEN;
-    if (!siteID || !token) throw e;
-    return await getStore({ name: "nuclear-oauth-refresh", siteID, token });
-  }
-}
-
-async function refreshToken(chan: Chan) {
-  const store = await openOAuthStore();
-  const rec = await store.getJSON<{ refresh_token: string }>(chan);
-  if (!rec?.refresh_token) throw new Error(`No refresh_token for channel ${chan}. Run OAuth connect.`);
-  return rec.refresh_token;
+export async function getAuthorizedClient(channel: "A"|"B") {
+  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) throw new Error("Missing Google envs");
+  const oauth = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+  const refresh = await getRefreshToken(channel);
+  if (!refresh) throw new Error(`No refresh_token for channel ${channel}`);
+  oauth.setCredentials({ refresh_token: refresh });
+  return oauth;
 }
 
 export async function youtubeClient(chan: Chan) {
-  const rt = await refreshToken(chan);
-  const oAuth2 = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID!, process.env.GOOGLE_CLIENT_SECRET!);
-  oAuth2.setCredentials({ refresh_token: rt });
-  return google.youtube({ version: "v3", auth: oAuth2 });
+  const oauth = await getAuthorizedClient(chan);
+  return google.youtube({ version: "v3", auth: oauth });
 }
 
 export async function uploadShortFromUrl(chan: Chan, fileUrl: string, title: string, description: string, tags: string[], categoryId = "27") {
