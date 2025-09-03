@@ -4,7 +4,9 @@ import {
   Settings, Play, Pause, Database, Rss, Youtube, 
   Bot, Gauge, KeyRound, Eye, EyeOff, 
   Trash2, FileText, CheckCircle2, AlertCircle, 
-  Download, Globe2, BarChart3, TrendingUp, Users, Eye as EyeIcon
+  Download, Globe2, BarChart3, TrendingUp, Users, Eye as EyeIcon,
+  Zap, Target, Activity, Clock, ArrowRight, ArrowDown,
+  Video, Heart, MessageCircle, Share2, UserPlus, DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +19,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { apiClient, Config, QueueItem, LogEntry } from "@/lib/api";
-// Import analytics component directly to avoid dynamic import issues
 import { AdvancedAnalytics } from "@/components/AdvancedAnalytics";
 
 // ----------------------------------------------
@@ -48,100 +49,79 @@ function MaskedInput({ value, onChange, placeholder }: { value: string; onChange
         type={show ? "text" : "password"} 
         value={value} 
         onChange={e => onChange(e.target.value)} 
-        placeholder={placeholder} 
-        className="pr-10" 
+        placeholder={placeholder}
+        className="pr-10 bg-white/10 border-white/20 text-white placeholder:text-slate-400"
       />
-      <button 
-        type="button" 
-        onClick={() => setShow(s => !s)} 
-        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100"
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        onClick={() => setShow(!show)}
+        className="absolute right-0 top-0 h-full px-3 text-slate-400 hover:text-white"
       >
-        {show ? <EyeOff size={18}/> : <Eye size={18}/>}
-      </button>
+        {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </Button>
     </div>
-  )
-}
-
-const defaultState = () => ({
-  timezone: "America/New_York",
-  openai: { apiKey: "", model: "gpt-4o-mini" },
-  creatify: { apiId: "", apiKey: "", aspect: "9x16", length: 15, captions: true, noCta: false },
-  nuclear: { 
-    apiKey: "7034688f756e58db675073e27c52ec79", 
-    baseUrl: "https://nuclearsmm.com/api/v2", 
-    services: { 
-      views: { id: 200, qty: 500 }, 
-      likes: { id: 1217, qty: 15 }, 
-      pin_likes: { id: 115, qty: 15 }, 
-      comments: { id: 1117, qty: 2, target: "comment", send_text: true } 
-    } 
-  },
-  youtube: {
-    dailyPerChannel: 2,
-    channels: {
-      Channel_A: { titlePrefix: "Automotive SEO • ", categoryId: "27", privacy: "public" },
-      Channel_B: { titlePrefix: "Auto SEO Tip • ", categoryId: "27", privacy: "public" },
-    }
-  },
-  rss: { 
-    url: "https://rss-bridge.org/bridge01/?action=display&bridge=FeedMergeBridge&feed_name=SEO+News&feed_1=https%3A%2F%2Fmoz.com%2Fposts%2Frss%2Fblog&feed_2=https%3A%2F%2Fsearchengineland.com%2Ffeed&feed_3=https%3A%2F%2Fblog.google%2Frss%2F&feed_4=https%3A%2F%2Fwww.aleydasolis.com%2Fen%2Ffeed%2F&feed_5=http%3A%2F%2Ffeeds.seroundtable.com%2FSearchEngineRoundtable1&feed_6=https%3A%2F%2Fwww.semrush.com%2Fblog%2Ffeed%2F&feed_7=https%3A%2F%2Fyoast.com%2Ffeed%2F&feed_8=https%3A%2F%2Fahrefs.com%2Fblog%2Ffeed%2F&feed_9=&feed_10=&limit=&format=Atom", 
-    maxFetch: 30, 
-    dedupeHours: 48 
-  },
-  agents: {
-    Ava: { 
-      label: "Ava – Group Dealer Strategist", 
-      channels: ["Channel_A"], 
-      domains: ["ahrefs.com","moz.com","seo.com"], 
-      tone: "sharp, analytical, big-picture" 
-    },
-    Maya: { 
-      label: "Maya – OEM Program Insider", 
-      channels: ["Channel_B"], 
-      domains: ["developers.google.com","blog.google","searchengineland.com","seroundtable.com"], 
-      tone: "professional, polished, structured" 
-    },
-  },
-  queue: [] as any[],
-  logs: [] as any[],
-});
-
-function Pill({ color = "", children }: { color?: string; children: React.ReactNode }) {
-  return (
-    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${color}`}>
-      {children}
-    </span>
   );
 }
 
 export default function App() {
-  const [state, setState] = useLocalStorageState(LS_KEY, defaultState);
-  const [isRunning, setIsRunning] = useState(false);
-  const [activeTab, setActiveTab] = useState("config");
   const [apiConnected, setApiConnected] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [youtubeAuth, setYoutubeAuth] = useState<{
-    channelA: { authorized: boolean; title?: string; id?: string };
-    channelB: { authorized: boolean; title?: string; id?: string };
-  }>({
-    channelA: { authorized: false },
-    channelB: { authorized: false }
-  });
-
+  const [youtubeAuth, setYoutubeAuth] = useState<{A: boolean, B: boolean}>({A: false, B: false});
   const [channelAnalytics, setChannelAnalytics] = useState<{
-    A: any;
-    B: any;
+    A: any,
+    B: any
   }>({
     A: null,
     B: null
   });
+
+  const [state, setState] = useLocalStorageState(LS_KEY, () => ({
+    timezone: "America/New_York",
+    agents: [
+      { name: "Ava", personality: "Tech-savvy millennial", target: "tech enthusiasts" },
+      { name: "Maya", personality: "Creative professional", target: "design community" }
+    ],
+    rss: {
+      url: "",
+      enabled: true,
+      updateInterval: 30
+    },
+    openai: {
+      model: "gpt-4o-mini"
+    },
+    creatify: {
+      aspect: "9:16",
+      length: 30,
+      noCta: false
+    },
+    nuclear: {
+      enabled: true,
+      apiKey: "",
+      apiUrl: "https://nuclear-api.com",
+      dailyBudget: 50,
+      boostTypes: ["views", "likes", "comments", "subscribers"]
+    },
+    youtube: {
+      dailyPerChannel: 2,
+      channels: {
+        A: { name: "Ava's Tech Channel", handle: "@avatech" },
+        B: { name: "Maya's Creative Space", handle: "@mayacreative" }
+      }
+    }
+  }));
 
   // Check API connection on mount
   useEffect(() => {
     checkApiConnection();
     loadData();
     loadYoutubeAuth();
+    // Auto-load analytics for both channels
+    loadChannelAnalytics('A');
+    loadChannelAnalytics('B');
   }, []);
 
   const loadYoutubeAuth = async () => {
@@ -303,108 +283,126 @@ export default function App() {
                 Nuclear YouTube Scheduler
               </h1>
               <p className="text-slate-300">
-                Automated SEO content pipeline with AI-powered video generation
+                Automated RSS-to-YouTube video generation with SMM boosting
               </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${apiConnected ? 'bg-green-400' : 'bg-red-400'}`} />
+                <div className={`w-3 h-3 rounded-full ${apiConnected ? 'bg-green-400' : 'bg-red-400'}`} />
                 <span className="text-sm text-slate-300">
-                  {apiConnected ? 'API Connected' : 'API Disconnected'}
+                  {apiConnected ? 'Connected' : 'Disconnected'}
                 </span>
               </div>
-              <Button 
-                onClick={fetchRSS} 
-                disabled={!apiConnected}
-                variant="outline" 
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              <Button
+                onClick={runQueue}
+                disabled={isRunning}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0"
               >
-                <Rss className="w-4 h-4 mr-2" />
-                Fetch RSS
-              </Button>
-              <Button 
-                onClick={runQueue} 
-                disabled={isRunning || queue.length === 0 || !apiConnected}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {isRunning ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-                {isRunning ? 'Running...' : 'Run Queue'}
-              </Button>
-              <Button 
-                onClick={exportConfig}
-                variant="outline" 
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export Config
+                {isRunning ? (
+                  <>
+                    <Pause className="w-4 h-4 mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" />
+                    Run Now
+                  </>
+                )}
               </Button>
             </div>
           </div>
         </motion.div>
 
-        {/* Status Cards */}
+        {/* Workflow Overview */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8"
+          className="mb-8"
         >
           <Card className="bg-white/10 border-white/20 text-white">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-300">Queue</p>
-                  <p className="text-2xl font-bold">{queue.length}</p>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Bot className="w-6 h-6 mr-3 text-purple-400" />
+                Automated Workflow Pipeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {/* Step 1: RSS Processing */}
+                <div className="text-center">
+                  <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 p-4 rounded-xl border border-blue-500/30 mb-4">
+                    <Rss className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                    <h3 className="font-semibold text-blue-300">RSS Processing</h3>
+                  </div>
+                  <p className="text-sm text-slate-400">Fetches articles from RSS feeds</p>
+                  <div className="mt-2">
+                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+                      {state.rss.enabled ? 'Active' : 'Disabled'}
+                    </Badge>
+                  </div>
                 </div>
-                <Database className="w-8 h-8 text-blue-400" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white/10 border-white/20 text-white">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-300">Agents</p>
-                  <p className="text-2xl font-bold">{Object.keys(state.agents).length}</p>
+
+                {/* Arrow */}
+                <div className="flex items-center justify-center">
+                  <ArrowRight className="w-6 h-6 text-slate-400" />
                 </div>
-                <Bot className="w-8 h-8 text-purple-400" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white/10 border-white/20 text-white">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-300">Channels</p>
-                  <p className="text-2xl font-bold">{Object.keys(state.youtube.channels).length}</p>
+
+                {/* Step 2: Video Generation */}
+                <div className="text-center">
+                  <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 p-4 rounded-xl border border-green-500/30 mb-4">
+                    <Video className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                    <h3 className="font-semibold text-green-300">Video Generation</h3>
+                  </div>
+                  <p className="text-sm text-slate-400">Creates YouTube Shorts using AI</p>
+                  <div className="mt-2">
+                    <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
+                      {queue.length} in queue
+                    </Badge>
+                  </div>
                 </div>
-                <Youtube className="w-8 h-8 text-red-400" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white/10 border-white/20 text-white">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-300">Daily Shorts</p>
-                  <p className="text-2xl font-bold">{state.youtube.dailyPerChannel * Object.keys(state.youtube.channels).length}</p>
+
+                {/* Arrow */}
+                <div className="flex items-center justify-center">
+                  <ArrowRight className="w-6 h-6 text-slate-400" />
                 </div>
-                <Gauge className="w-8 h-8 text-green-400" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white/10 border-white/20 text-white">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-300">Scheduler</p>
-                  <p className="text-sm font-semibold text-green-300">Daily 9AM ET</p>
+
+                {/* Step 3: YouTube Publishing */}
+                <div className="text-center">
+                  <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 p-4 rounded-xl border border-purple-500/30 mb-4">
+                    <Youtube className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                    <h3 className="font-semibold text-purple-300">YouTube Publishing</h3>
+                  </div>
+                  <p className="text-sm text-slate-400">Publishes to persona channels</p>
+                  <div className="mt-2 space-y-1">
+                    <Badge className={`${youtubeAuth.A ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}`}>
+                      Channel A {youtubeAuth.A ? '✓' : '✗'}
+                    </Badge>
+                    <Badge className={`${youtubeAuth.B ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}`}>
+                      Channel B {youtubeAuth.B ? '✓' : '✗'}
+                    </Badge>
+                  </div>
                 </div>
-                <CheckCircle2 className="w-8 h-8 text-green-400" />
+
+                {/* Arrow */}
+                <div className="flex items-center justify-center">
+                  <ArrowRight className="w-6 h-6 text-slate-400" />
+                </div>
+
+                {/* Step 4: SMM Boosting */}
+                <div className="text-center">
+                  <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 p-4 rounded-xl border border-orange-500/30 mb-4">
+                    <Zap className="w-8 h-8 text-orange-400 mx-auto mb-2" />
+                    <h3 className="font-semibold text-orange-300">SMM Nuclear Boost</h3>
+                  </div>
+                  <p className="text-sm text-slate-400">Boosts engagement & views</p>
+                  <div className="mt-2">
+                    <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30">
+                      {state.nuclear.enabled ? 'Active' : 'Disabled'}
+                    </Badge>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -416,498 +414,271 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-7 bg-white/10 border-white/20">
-              <TabsTrigger value="config" className="text-white data-[state=active]:bg-white/20">
-                <Settings className="w-4 h-4 mr-2" />
-                Config
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-5 bg-white/10 border-white/20">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-white/20">
+                <Activity className="w-4 h-4 mr-2" />
+                Overview
               </TabsTrigger>
-              <TabsTrigger value="agents" className="text-white data-[state=active]:bg-white/20">
-                <Bot className="w-4 h-4 mr-2" />
-                Agents
+              <TabsTrigger value="channels" className="data-[state=active]:bg-white/20">
+                <Users className="w-4 h-4 mr-2" />
+                Channels
               </TabsTrigger>
-              <TabsTrigger value="rss" className="text-white data-[state=active]:bg-white/20">
-                <Rss className="w-4 h-4 mr-2" />
-                RSS
-              </TabsTrigger>
-              <TabsTrigger value="youtube" className="text-white data-[state=active]:bg-white/20">
-                <Youtube className="w-4 h-4 mr-2" />
-                YouTube
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="text-white data-[state=active]:bg-white/20">
+              <TabsTrigger value="analytics" className="data-[state=active]:bg-white/20">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Analytics
               </TabsTrigger>
-              <TabsTrigger value="queue" className="text-white data-[state=active]:bg-white/20">
+              <TabsTrigger value="queue" className="data-[state=active]:bg-white/20">
                 <Database className="w-4 h-4 mr-2" />
                 Queue
               </TabsTrigger>
-              <TabsTrigger value="logs" className="text-white data-[state=active]:bg-white/20">
-                <FileText className="w-4 h-4 mr-2" />
-                Logs
+              <TabsTrigger value="settings" className="data-[state=active]:bg-white/20">
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
               </TabsTrigger>
             </TabsList>
 
-            {/* Configuration Tab */}
-            <TabsContent value="config" className="mt-6">
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="mt-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* API Keys */}
+                {/* Channel Performance */}
                 <Card className="bg-white/10 border-white/20 text-white">
                   <CardHeader>
                     <CardTitle className="flex items-center">
-                      <KeyRound className="w-5 h-5 mr-2" />
-                      API Keys
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label className="text-slate-300">OpenAI API Key</Label>
-                      <MaskedInput
-                        value={state.openai.apiKey}
-                        onChange={(value) => updateState('openai.apiKey', value)}
-                        placeholder="sk-..."
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Creatify API ID</Label>
-                      <MaskedInput
-                        value={state.creatify.apiId}
-                        onChange={(value) => updateState('creatify.apiId', value)}
-                        placeholder="API ID"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Creatify API Key</Label>
-                      <MaskedInput
-                        value={state.creatify.apiKey}
-                        onChange={(value) => updateState('creatify.apiKey', value)}
-                        placeholder="API Key"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">NuclearSMM API Key</Label>
-                      <MaskedInput
-                        value={state.nuclear.apiKey}
-                        onChange={(value) => updateState('nuclear.apiKey', value)}
-                        placeholder="API Key"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Creatify Settings */}
-                <Card className="bg-white/10 border-white/20 text-white">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Globe2 className="w-5 h-5 mr-2" />
-                      Creatify Settings
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label className="text-slate-300">Aspect Ratio</Label>
-                      <Select value={state.creatify.aspect} onValueChange={(value) => updateState('creatify.aspect', value)}>
-                        <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="9x16">9:16 (Vertical)</SelectItem>
-                          <SelectItem value="16x9">16:9 (Horizontal)</SelectItem>
-                          <SelectItem value="1x1">1:1 (Square)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Video Length: {state.creatify.length}s</Label>
-                      <Slider
-                        value={[state.creatify.length]}
-                        onValueChange={([value]) => updateState('creatify.length', value)}
-                        max={60}
-                        min={5}
-                        step={5}
-                        className="mt-2"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label className="text-slate-300">Enable Captions</Label>
-                      <Switch
-                        checked={state.creatify.captions}
-                        onCheckedChange={(checked) => updateState('creatify.captions', checked)}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label className="text-slate-300">No CTA</Label>
-                      <Switch
-                        checked={state.creatify.noCta}
-                        onCheckedChange={(checked) => updateState('creatify.noCta', checked)}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            {/* Agents Tab */}
-            <TabsContent value="agents" className="mt-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {Object.entries(state.agents).map(([key, agent]: [string, any]) => (
-                  <Card key={key} className="bg-white/10 border-white/20 text-white">
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span className="flex items-center">
-                          <Bot className="w-5 h-5 mr-2" />
-                          {agent.label}
-                        </span>
-                        <Pill color="bg-purple-500/20 text-purple-300">
-                          {agent.channels.length} channel{agent.channels.length !== 1 ? 's' : ''}
-                        </Pill>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <Label className="text-slate-300">Tone</Label>
-                        <Input
-                          value={agent.tone}
-                          onChange={(e) => updateState(`agents.${key}.tone`, e.target.value)}
-                          className="bg-white/10 border-white/20 text-white"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-slate-300">Allowed Domains</Label>
-                        <Textarea
-                          value={agent.domains.join(', ')}
-                          onChange={(e) => updateState(`agents.${key}.domains`, e.target.value.split(',').map(d => d.trim()))}
-                          className="bg-white/10 border-white/20 text-white"
-                          rows={3}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-slate-300">Channels</Label>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {agent.channels.map((channel: string) => (
-                            <Badge key={channel} variant="secondary" className="bg-blue-500/20 text-blue-300">
-                              {channel}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            {/* RSS Tab */}
-            <TabsContent value="rss" className="mt-6">
-              <Card className="bg-white/10 border-white/20 text-white">
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Rss className="w-5 h-5 mr-2" />
-                    RSS Configuration
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label className="text-slate-300">Feed URL</Label>
-                    <Textarea
-                      value={state.rss.url}
-                      onChange={(e) => updateState('rss.url', e.target.value)}
-                      className="bg-white/10 border-white/20 text-white"
-                      rows={4}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-slate-300">Max Fetch</Label>
-                      <Input
-                        type="number"
-                        value={state.rss.maxFetch}
-                        onChange={(e) => updateState('rss.maxFetch', parseInt(e.target.value))}
-                        className="bg-white/10 border-white/20 text-white"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Dedupe Hours</Label>
-                      <Input
-                        type="number"
-                        value={state.rss.dedupeHours}
-                        onChange={(e) => updateState('rss.dedupeHours', parseInt(e.target.value))}
-                        className="bg-white/10 border-white/20 text-white"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* YouTube Tab */}
-            <TabsContent value="youtube" className="mt-6">
-              <div className="space-y-6">
-                <Card className="bg-white/10 border-white/20 text-white">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Youtube className="w-5 h-5 mr-2" />
-                      YouTube Settings
+                      <Target className="w-5 h-5 mr-2 text-purple-400" />
+                      Channel Performance
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div>
-                      <Label className="text-slate-300">Daily Shorts per Channel</Label>
-                      <Slider
-                        value={[state.youtube.dailyPerChannel]}
-                        onValueChange={([value]) => updateState('youtube.dailyPerChannel', value)}
-                        max={10}
-                        min={1}
-                        step={1}
-                        className="mt-2"
-                      />
-                      <p className="text-sm text-slate-400 mt-1">
-                        {state.youtube.dailyPerChannel} shorts per channel
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* YouTube OAuth Section */}
-                <Card className="bg-white/10 border-white/20 text-white">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <KeyRound className="w-5 h-5 mr-2" />
-                      YouTube Authorization
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-4">
                       {/* Channel A */}
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-semibold">Channel A (Ava)</h3>
-                          <Badge 
-                            variant="secondary" 
-                            className={youtubeAuth.channelA.authorized ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}
-                          >
-                            {youtubeAuth.channelA.authorized ? "Authorized" : "Not Authorized"}
+                      <div className="bg-gradient-to-r from-pink-500/10 to-purple-500/10 p-4 rounded-lg border border-pink-500/20">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <div className="w-3 h-3 bg-pink-400 rounded-full mr-3"></div>
+                            <h3 className="font-semibold">Channel A (Ava)</h3>
+                          </div>
+                          <Badge className="bg-pink-500/20 text-pink-300 border-pink-500/30">
+                            {youtubeAuth.A ? 'Connected' : 'Not Connected'}
                           </Badge>
                         </div>
-                        {youtubeAuth.channelA.authorized ? (
-                          <div className="space-y-2">
-                            <p className="text-sm text-slate-300">
-                              <strong>Channel:</strong> {youtubeAuth.channelA.title}
-                            </p>
-                            <p className="text-sm text-slate-300">
-                              <strong>ID:</strong> {youtubeAuth.channelA.id}
-                            </p>
-                            <p className="text-sm text-slate-300">
-                              <strong>Subscribers:</strong> {youtubeAuth.channelA.subscriberCount || 'N/A'}
-                            </p>
+                        {channelAnalytics.A ? (
+                          <div className="grid grid-cols-3 gap-4">
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-pink-400">
+                                {channelAnalytics.A.subscribers ? parseInt(channelAnalytics.A.subscribers).toLocaleString() : 'N/A'}
+                              </p>
+                              <p className="text-xs text-slate-400">Subscribers</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-pink-400">
+                                {channelAnalytics.A.totalViews ? parseInt(channelAnalytics.A.totalViews).toLocaleString() : 'N/A'}
+                              </p>
+                              <p className="text-xs text-slate-400">Total Views</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-pink-400">
+                                {channelAnalytics.A.videoCount || 'N/A'}
+                              </p>
+                              <p className="text-xs text-slate-400">Videos</p>
+                            </div>
                           </div>
                         ) : (
-                          <div className="space-y-2">
-                            <p className="text-sm text-slate-400">
-                              Channel A needs to be authorized to upload videos.
-                            </p>
-                            <Button
-                              onClick={() => initiateYouTubeOAuth('A')}
-                              className="bg-blue-500/20 border-blue-500/30 text-blue-300 hover:bg-blue-500/30"
-                            >
-                              Authorize Channel A
-                            </Button>
+                          <div className="text-center py-4">
+                            <div className="animate-spin w-6 h-6 border-2 border-pink-400 border-t-transparent rounded-full mx-auto mb-2"></div>
+                            <p className="text-sm text-slate-400">Loading analytics...</p>
                           </div>
                         )}
                       </div>
 
                       {/* Channel B */}
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-semibold">Channel B (Maya)</h3>
-                          <Badge 
-                            variant="secondary" 
-                            className={youtubeAuth.channelB.authorized ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}
-                          >
-                            {youtubeAuth.channelB.authorized ? "Authorized" : "Not Authorized"}
+                      <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-4 rounded-lg border border-blue-500/20">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <div className="w-3 h-3 bg-blue-400 rounded-full mr-3"></div>
+                            <h3 className="font-semibold">Channel B (Maya)</h3>
+                          </div>
+                          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+                            {youtubeAuth.B ? 'Connected' : 'Not Connected'}
                           </Badge>
                         </div>
-                        {youtubeAuth.channelB.authorized ? (
-                          <div className="space-y-2">
-                            <p className="text-sm text-slate-300">
-                              <strong>Channel:</strong> {youtubeAuth.channelB.title}
-                            </p>
-                            <p className="text-sm text-slate-300">
-                              <strong>ID:</strong> {youtubeAuth.channelB.id}
-                            </p>
-                            <p className="text-sm text-slate-300">
-                              <strong>Subscribers:</strong> {youtubeAuth.channelB.subscriberCount || 'N/A'}
-                            </p>
+                        {channelAnalytics.B ? (
+                          <div className="grid grid-cols-3 gap-4">
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-blue-400">
+                                {channelAnalytics.B.subscribers ? parseInt(channelAnalytics.B.subscribers).toLocaleString() : 'N/A'}
+                              </p>
+                              <p className="text-xs text-slate-400">Subscribers</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-blue-400">
+                                {channelAnalytics.B.totalViews ? parseInt(channelAnalytics.B.totalViews).toLocaleString() : 'N/A'}
+                              </p>
+                              <p className="text-xs text-slate-400">Total Views</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-blue-400">
+                                {channelAnalytics.B.videoCount || 'N/A'}
+                              </p>
+                              <p className="text-xs text-slate-400">Videos</p>
+                            </div>
                           </div>
                         ) : (
-                          <div className="space-y-2">
-                            <p className="text-sm text-slate-400">
-                              Channel B needs to be authorized to upload videos.
-                            </p>
-                            <Button
-                              onClick={() => initiateYouTubeOAuth('B')}
-                              className="bg-blue-500/20 border-blue-500/30 text-blue-300 hover:bg-blue-500/30"
-                            >
-                              Authorize Channel B
-                            </Button>
+                          <div className="text-center py-4">
+                            <div className="animate-spin w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-2"></div>
+                            <p className="text-sm text-slate-400">Loading analytics...</p>
                           </div>
                         )}
                       </div>
                     </div>
-                    
-                    <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                      <h4 className="text-sm font-semibold text-blue-300 mb-2">OAuth Instructions:</h4>
-                      <ol className="text-sm text-slate-300 space-y-1 list-decimal list-inside">
-                        <li>Click "Authorize Channel" for each channel you want to use</li>
-                        <li>Complete the YouTube OAuth flow in the popup window</li>
-                        <li>Grant permissions for video uploads and comments</li>
-                        <li>Return to this dashboard - authorization will be saved automatically</li>
-                      </ol>
+                  </CardContent>
+                </Card>
+
+                {/* System Status */}
+                <Card className="bg-white/10 border-white/20 text-white">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Gauge className="w-5 h-5 mr-2 text-green-400" />
+                      System Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <div className="flex items-center">
+                          <Rss className="w-5 h-5 text-blue-400 mr-3" />
+                          <span>RSS Feed</span>
+                        </div>
+                        <Badge className={state.rss.enabled ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}>
+                          {state.rss.enabled ? 'Active' : 'Disabled'}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <div className="flex items-center">
+                          <Video className="w-5 h-5 text-green-400 mr-3" />
+                          <span>Video Generation</span>
+                        </div>
+                        <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+                          {queue.length} in queue
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <div className="flex items-center">
+                          <Youtube className="w-5 h-5 text-red-400 mr-3" />
+                          <span>YouTube Channels</span>
+                        </div>
+                        <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+                          {youtubeAuth.A && youtubeAuth.B ? '2 Connected' : `${(youtubeAuth.A ? 1 : 0) + (youtubeAuth.B ? 1 : 0)} Connected`}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <div className="flex items-center">
+                          <Zap className="w-5 h-5 text-orange-400 mr-3" />
+                          <span>SMM Nuclear</span>
+                        </div>
+                        <Badge className={state.nuclear.enabled ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}>
+                          {state.nuclear.enabled ? 'Active' : 'Disabled'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Channels Tab */}
+            <TabsContent value="channels" className="mt-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Channel A Setup */}
+                <Card className="bg-white/10 border-white/20 text-white">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center">
+                        <Users className="w-5 h-5 mr-2 text-pink-400" />
+                        Channel A (Ava)
+                      </span>
+                      <Badge className={youtubeAuth.A ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}>
+                        {youtubeAuth.A ? 'Connected' : 'Not Connected'}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-slate-300">Channel Name</Label>
+                        <Input
+                          value={state.youtube.channels.A.name}
+                          onChange={e => updateState('youtube.channels.A.name', e.target.value)}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Handle</Label>
+                        <Input
+                          value={state.youtube.channels.A.handle}
+                          onChange={e => updateState('youtube.channels.A.handle', e.target.value)}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                      <Button
+                        onClick={() => initiateYouTubeOAuth('A')}
+                        className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white border-0"
+                      >
+                        {youtubeAuth.A ? 'Reconnect YouTube' : 'Connect YouTube'}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {Object.entries(state.youtube.channels).map(([key, channel]: [string, any]) => (
-                    <Card key={key} className="bg-white/10 border-white/20 text-white">
-                      <CardHeader>
-                        <CardTitle className="flex items-center">
-                          <Youtube className="w-5 h-5 mr-2" />
-                          {key}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div>
-                          <Label className="text-slate-300">Title Prefix</Label>
-                          <Input
-                            value={channel.titlePrefix}
-                            onChange={(e) => updateState(`youtube.channels.${key}.titlePrefix`, e.target.value)}
-                            className="bg-white/10 border-white/20 text-white"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-slate-300">Category ID</Label>
-                          <Input
-                            value={channel.categoryId}
-                            onChange={(e) => updateState(`youtube.channels.${key}.categoryId`, e.target.value)}
-                            className="bg-white/10 border-white/20 text-white"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-slate-300">Privacy</Label>
-                          <Select value={channel.privacy} onValueChange={(value) => updateState(`youtube.channels.${key}.privacy`, value)}>
-                            <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="public">Public</SelectItem>
-                              <SelectItem value="private">Private</SelectItem>
-                              <SelectItem value="unlisted">Unlisted</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                {/* Channel B Setup */}
+                <Card className="bg-white/10 border-white/20 text-white">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center">
+                        <Users className="w-5 h-5 mr-2 text-blue-400" />
+                        Channel B (Maya)
+                      </span>
+                      <Badge className={youtubeAuth.B ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}>
+                        {youtubeAuth.B ? 'Connected' : 'Not Connected'}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-slate-300">Channel Name</Label>
+                        <Input
+                          value={state.youtube.channels.B.name}
+                          onChange={e => updateState('youtube.channels.B.name', e.target.value)}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Handle</Label>
+                        <Input
+                          value={state.youtube.channels.B.handle}
+                          onChange={e => updateState('youtube.channels.B.handle', e.target.value)}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                      <Button
+                        onClick={() => initiateYouTubeOAuth('B')}
+                        className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0"
+                      >
+                        {youtubeAuth.B ? 'Reconnect YouTube' : 'Connect YouTube'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
 
             {/* Analytics Tab */}
             <TabsContent value="analytics" className="mt-6">
               <div className="space-y-6">
-                <Card className="bg-white/10 border-white/20 text-white">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <BarChart3 className="w-5 h-5 mr-2" />
-                      YouTube Analytics Dashboard
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Channel A Analytics */}
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-semibold">Channel A (Ava)</h3>
-                          <Button
-                            onClick={() => loadChannelAnalytics('A')}
-                            className="bg-blue-500/20 border-blue-500/30 text-blue-300 hover:bg-blue-500/30"
-                            size="sm"
-                          >
-                            <TrendingUp className="w-4 h-4 mr-2" />
-                            Load Analytics
-                          </Button>
-                        </div>
-                        {channelAnalytics.A ? (
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="bg-white/5 p-3 rounded-lg">
-                                <p className="text-sm text-slate-400">Subscribers</p>
-                                <p className="text-lg font-semibold">{channelAnalytics.A.subscribers || 'N/A'}</p>
-                              </div>
-                              <div className="bg-white/5 p-3 rounded-lg">
-                                <p className="text-sm text-slate-400">Total Views</p>
-                                <p className="text-lg font-semibold">{channelAnalytics.A.totalViews || 'N/A'}</p>
-                              </div>
-                            </div>
-                            {channelAnalytics.A.lastVideo && (
-                              <div className="bg-white/5 p-3 rounded-lg">
-                                <p className="text-sm text-slate-400">Last Video</p>
-                                <p className="text-sm font-medium">{channelAnalytics.A.lastVideo.title}</p>
-                                <p className="text-xs text-slate-500">
-                                  {new Date(channelAnalytics.A.lastVideo.publishedAt).toLocaleDateString()}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-slate-400">Click "Load Analytics" to fetch channel data</p>
-                        )}
-                      </div>
-
-                      {/* Channel B Analytics */}
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-semibold">Channel B (Maya)</h3>
-                          <Button
-                            onClick={() => loadChannelAnalytics('B')}
-                            className="bg-blue-500/20 border-blue-500/30 text-blue-300 hover:bg-blue-500/30"
-                            size="sm"
-                          >
-                            <TrendingUp className="w-4 h-4 mr-2" />
-                            Load Analytics
-                          </Button>
-                        </div>
-                        {channelAnalytics.B ? (
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="bg-white/5 p-3 rounded-lg">
-                                <p className="text-sm text-slate-400">Subscribers</p>
-                                <p className="text-lg font-semibold">{channelAnalytics.B.subscribers || 'N/A'}</p>
-                              </div>
-                              <div className="bg-white/5 p-3 rounded-lg">
-                                <p className="text-sm text-slate-400">Total Views</p>
-                                <p className="text-lg font-semibold">{channelAnalytics.B.totalViews || 'N/A'}</p>
-                              </div>
-                            </div>
-                            {channelAnalytics.B.lastVideo && (
-                              <div className="bg-white/5 p-3 rounded-lg">
-                                <p className="text-sm text-slate-400">Last Video</p>
-                                <p className="text-sm font-medium">{channelAnalytics.B.lastVideo.title}</p>
-                                <p className="text-xs text-slate-500">
-                                  {new Date(channelAnalytics.B.lastVideo.publishedAt).toLocaleDateString()}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-slate-400">Click "Load Analytics" to fetch channel data</p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
                 {/* Advanced Analytics */}
                 <div className="grid grid-cols-1 gap-6">
                   <AdvancedAnalytics channel="A" channelName="Channel A (Ava)" />
@@ -953,38 +724,20 @@ export default function App() {
                     <div className="text-center py-8 text-slate-400">
                       <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
                       <p>No items in queue</p>
-                      <p className="text-sm">Click "Fetch RSS" to populate the queue</p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {queue.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-white">{item.title}</h4>
-                            <p className="text-sm text-slate-400">{item.url}</p>
-                            <p className="text-xs text-slate-500">
-                              {new Date(item.created_at).toLocaleString()}
-                            </p>
+                        <div key={item.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                            <div>
+                              <p className="text-white font-medium">{item.title}</p>
+                              <p className="text-sm text-slate-400">Agent: {item.agent}</p>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge 
-                              variant="secondary" 
-                              className={`${
-                                item.status === 'completed' ? 'bg-green-500/20 text-green-300' :
-                                item.status === 'failed' ? 'bg-red-500/20 text-red-300' :
-                                'bg-purple-500/20 text-purple-300'
-                              }`}
-                            >
-                              {item.agent}
-                            </Badge>
-                            <Badge 
-                              variant="outline"
-                              className={`${
-                                item.status === 'completed' ? 'bg-green-500/10 border-green-500/30 text-green-300' :
-                                item.status === 'failed' ? 'bg-red-500/10 border-red-500/30 text-red-300' :
-                                'bg-yellow-500/10 border-yellow-500/30 text-yellow-300'
-                              }`}
-                            >
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
                               {item.status}
                             </Badge>
                             <Button
@@ -992,9 +745,9 @@ export default function App() {
                               variant="outline"
                               onClick={async () => {
                                 try {
-                                  await apiClient.removeQueueItem(item.id);
+                                  await apiClient.removeFromQueue(item.id);
                                   await loadData();
-                                  addLog(`Removed item: ${item.title}`, "info");
+                                  addLog(`Removed ${item.title} from queue`, "info");
                                 } catch (error) {
                                   addLog(`Failed to remove item: ${error}`, "error");
                                 }
@@ -1012,64 +765,181 @@ export default function App() {
               </Card>
             </TabsContent>
 
-            {/* Logs Tab */}
-            <TabsContent value="logs" className="mt-6">
-              <Card className="bg-white/10 border-white/20 text-white">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="flex items-center">
-                      <FileText className="w-5 h-5 mr-2" />
-                      Activity Logs
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
-                        {logs.length} entries
-                      </Badge>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={async () => {
-                          try {
-                            await apiClient.clearLogs();
-                            await loadData();
-                            addLog("Logs cleared", "info");
-                          } catch (error) {
-                            addLog(`Failed to clear logs: ${error}`, "error");
-                          }
-                        }}
-                        className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                      >
-                        Clear
-                      </Button>
+            {/* Settings Tab */}
+            <TabsContent value="settings" className="mt-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* RSS Settings */}
+                <Card className="bg-white/10 border-white/20 text-white">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Rss className="w-5 h-5 mr-2 text-blue-400" />
+                      RSS Feed Settings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label className="text-slate-300">RSS URL</Label>
+                      <Input
+                        value={state.rss.url}
+                        onChange={e => updateState('rss.url', e.target.value)}
+                        placeholder="https://example.com/feed.xml"
+                        className="bg-white/10 border-white/20 text-white"
+                      />
                     </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {logs.length === 0 ? (
-                    <div className="text-center py-8 text-slate-400">
-                      <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>No logs yet</p>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-slate-300">Enable RSS Processing</Label>
+                      <Switch
+                        checked={state.rss.enabled}
+                        onCheckedChange={checked => updateState('rss.enabled', checked)}
+                      />
                     </div>
-                  ) : (
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
-                      {logs.slice().reverse().map((log) => (
-                        <div key={log.id} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
-                          <div className={`w-2 h-2 rounded-full mt-2 ${
-                            log.type === 'success' ? 'bg-green-400' : 
-                            log.type === 'error' ? 'bg-red-400' : 'bg-blue-400'
-                          }`} />
-                          <div className="flex-1">
-                            <p className="text-white">{log.message}</p>
-                            <p className="text-xs text-slate-400">
-                              {new Date(log.timestamp).toLocaleString()}
-                            </p>
+                    <div>
+                      <Label className="text-slate-300">Update Interval (minutes)</Label>
+                      <Slider
+                        value={[state.rss.updateInterval]}
+                        onValueChange={value => updateState('rss.updateInterval', value[0])}
+                        max={120}
+                        min={5}
+                        step={5}
+                        className="mt-2"
+                      />
+                      <p className="text-sm text-slate-400 mt-1">{state.rss.updateInterval} minutes</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* SMM Nuclear Settings */}
+                <Card className="bg-white/10 border-white/20 text-white">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Zap className="w-5 h-5 mr-2 text-orange-400" />
+                      SMM Nuclear Settings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-slate-300">Enable SMM Boosting</Label>
+                      <Switch
+                        checked={state.nuclear.enabled}
+                        onCheckedChange={checked => updateState('nuclear.enabled', checked)}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">API Key</Label>
+                      <MaskedInput
+                        value={state.nuclear.apiKey}
+                        onChange={value => updateState('nuclear.apiKey', value)}
+                        placeholder="Enter your SMM Nuclear API key"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">Daily Budget ($)</Label>
+                      <Input
+                        type="number"
+                        value={state.nuclear.dailyBudget}
+                        onChange={e => updateState('nuclear.dailyBudget', parseInt(e.target.value))}
+                        className="bg-white/10 border-white/20 text-white"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">Boost Types</Label>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        {['views', 'likes', 'comments', 'subscribers'].map((type) => (
+                          <div key={type} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={state.nuclear.boostTypes.includes(type)}
+                              onChange={e => {
+                                const newTypes = e.target.checked
+                                  ? [...state.nuclear.boostTypes, type]
+                                  : state.nuclear.boostTypes.filter(t => t !== type);
+                                updateState('nuclear.boostTypes', newTypes);
+                              }}
+                              className="rounded"
+                            />
+                            <Label className="text-sm text-slate-300 capitalize">{type}</Label>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+
+                {/* Video Generation Settings */}
+                <Card className="bg-white/10 border-white/20 text-white">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Video className="w-5 h-5 mr-2 text-green-400" />
+                      Video Generation Settings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label className="text-slate-300">Videos per Channel per Day</Label>
+                      <Input
+                        type="number"
+                        value={state.youtube.dailyPerChannel}
+                        onChange={e => updateState('youtube.dailyPerChannel', parseInt(e.target.value))}
+                        className="bg-white/10 border-white/20 text-white"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">Aspect Ratio</Label>
+                      <Select value={state.creatify.aspect} onValueChange={value => updateState('creatify.aspect', value)}>
+                        <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="9:16">9:16 (Vertical)</SelectItem>
+                          <SelectItem value="16:9">16:9 (Horizontal)</SelectItem>
+                          <SelectItem value="1:1">1:1 (Square)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">Video Length (seconds)</Label>
+                      <Slider
+                        value={[state.creatify.length]}
+                        onValueChange={value => updateState('creatify.length', value[0])}
+                        max={60}
+                        min={15}
+                        step={5}
+                        className="mt-2"
+                      />
+                      <p className="text-sm text-slate-400 mt-1">{state.creatify.length} seconds</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-slate-300">Disable Call-to-Action</Label>
+                      <Switch
+                        checked={state.creatify.noCta}
+                        onCheckedChange={checked => updateState('creatify.noCta', checked)}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Export/Import */}
+                <Card className="bg-white/10 border-white/20 text-white">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Download className="w-5 h-5 mr-2 text-purple-400" />
+                      Configuration
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button
+                      onClick={exportConfig}
+                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Export Configuration
+                    </Button>
+                    <p className="text-sm text-slate-400">
+                      Export your current settings to a JSON file for backup or sharing.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </motion.div>
