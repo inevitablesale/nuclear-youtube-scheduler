@@ -1,7 +1,7 @@
 [build]
-  base = "dashboard/"
+  base = "."
   publish = "dashboard/dist"
-  command = "npm ci && npm run build && cd ../netlify && npm ci"
+  command = "cd dashboard && npm ci && npm run build"
 
 [build.environment]
   NODE_VERSION = "18"

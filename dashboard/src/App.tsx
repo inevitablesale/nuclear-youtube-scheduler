@@ -119,12 +119,39 @@ export default function App() {
   const [apiConnected, setApiConnected] = useState(false);
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [youtubeAuth, setYoutubeAuth] = useState<{
+    channelA: { authorized: boolean; title?: string; id?: string };
+    channelB: { authorized: boolean; title?: string; id?: string };
+  }>({
+    channelA: { authorized: false },
+    channelB: { authorized: false }
+  });
 
   // Check API connection on mount
   useEffect(() => {
     checkApiConnection();
     loadData();
+    loadYoutubeAuth();
   }, []);
+
+  const loadYoutubeAuth = async () => {
+    try {
+      const authStatus = await apiClient.getAuthStatus();
+      setYoutubeAuth(authStatus);
+    } catch (error) {
+      console.error('Failed to load YouTube auth status:', error);
+    }
+  };
+
+  const initiateYouTubeOAuth = async (channel: 'A' | 'B') => {
+    try {
+      addLog(`Initiating YouTube OAuth for Channel ${channel}...`, 'info');
+      await apiClient.initiateOAuth(channel);
+      addLog(`OAuth window opened for Channel ${channel}. Complete authorization and return here.`, 'info');
+    } catch (error) {
+      addLog(`Failed to initiate OAuth for Channel ${channel}: ${error}`, 'error');
+    }
+  };
 
   const checkApiConnection = async () => {
     try {
@@ -315,7 +342,7 @@ export default function App() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
+          className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8"
         >
           <Card className="bg-white/10 border-white/20 text-white">
             <CardContent className="p-4">
@@ -361,6 +388,18 @@ export default function App() {
                   <p className="text-2xl font-bold">{state.youtube.dailyPerChannel * Object.keys(state.youtube.channels).length}</p>
                 </div>
                 <Gauge className="w-8 h-8 text-green-400" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white/10 border-white/20 text-white">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-300">Scheduler</p>
+                  <p className="text-sm font-semibold text-green-300">Daily 9AM ET</p>
+                </div>
+                <CheckCircle2 className="w-8 h-8 text-green-400" />
               </div>
             </CardContent>
           </Card>
@@ -616,6 +655,105 @@ export default function App() {
                       <p className="text-sm text-slate-400 mt-1">
                         {state.youtube.dailyPerChannel} shorts per channel
                       </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* YouTube OAuth Section */}
+                <Card className="bg-white/10 border-white/20 text-white">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <KeyRound className="w-5 h-5 mr-2" />
+                      YouTube Authorization
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Channel A */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold">Channel A (Ava)</h3>
+                          <Badge 
+                            variant="secondary" 
+                            className={youtubeAuth.channelA.authorized ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}
+                          >
+                            {youtubeAuth.channelA.authorized ? "Authorized" : "Not Authorized"}
+                          </Badge>
+                        </div>
+                        {youtubeAuth.channelA.authorized ? (
+                          <div className="space-y-2">
+                            <p className="text-sm text-slate-300">
+                              <strong>Channel:</strong> {youtubeAuth.channelA.title}
+                            </p>
+                            <p className="text-sm text-slate-300">
+                              <strong>ID:</strong> {youtubeAuth.channelA.id}
+                            </p>
+                            <p className="text-sm text-slate-300">
+                              <strong>Subscribers:</strong> {youtubeAuth.channelA.subscriberCount || 'N/A'}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <p className="text-sm text-slate-400">
+                              Channel A needs to be authorized to upload videos.
+                            </p>
+                            <Button
+                              onClick={() => initiateYouTubeOAuth('A')}
+                              className="bg-blue-500/20 border-blue-500/30 text-blue-300 hover:bg-blue-500/30"
+                            >
+                              Authorize Channel A
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Channel B */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold">Channel B (Maya)</h3>
+                          <Badge 
+                            variant="secondary" 
+                            className={youtubeAuth.channelB.authorized ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}
+                          >
+                            {youtubeAuth.channelB.authorized ? "Authorized" : "Not Authorized"}
+                          </Badge>
+                        </div>
+                        {youtubeAuth.channelB.authorized ? (
+                          <div className="space-y-2">
+                            <p className="text-sm text-slate-300">
+                              <strong>Channel:</strong> {youtubeAuth.channelB.title}
+                            </p>
+                            <p className="text-sm text-slate-300">
+                              <strong>ID:</strong> {youtubeAuth.channelB.id}
+                            </p>
+                            <p className="text-sm text-slate-300">
+                              <strong>Subscribers:</strong> {youtubeAuth.channelB.subscriberCount || 'N/A'}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <p className="text-sm text-slate-400">
+                              Channel B needs to be authorized to upload videos.
+                            </p>
+                            <Button
+                              onClick={() => initiateYouTubeOAuth('B')}
+                              className="bg-blue-500/20 border-blue-500/30 text-blue-300 hover:bg-blue-500/30"
+                            >
+                              Authorize Channel B
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                      <h4 className="text-sm font-semibold text-blue-300 mb-2">OAuth Instructions:</h4>
+                      <ol className="text-sm text-slate-300 space-y-1 list-decimal list-inside">
+                        <li>Click "Authorize Channel" for each channel you want to use</li>
+                        <li>Complete the YouTube OAuth flow in the popup window</li>
+                        <li>Grant permissions for video uploads and comments</li>
+                        <li>Return to this dashboard - authorization will be saved automatically</li>
+                      </ol>
                     </div>
                   </CardContent>
                 </Card>
