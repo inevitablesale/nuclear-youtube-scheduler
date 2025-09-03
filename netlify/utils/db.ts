@@ -34,6 +34,40 @@ export async function ensureMigrations() {
     watch_time_seconds bigint,
     primary key (channel_label, date, video_id)
   )`;
+  
+  // retention curves table
+  await sql`create table if not exists analytics_retention (
+    channel_label text not null references channels(label) on delete cascade,
+    video_id text,
+    time_offset_seconds int,
+    audience_watch_ratio float,
+    relative_performance float,
+    date date default current_date,
+    primary key (channel_label, video_id, time_offset_seconds, date)
+  )`;
+  
+  // search keywords table
+  await sql`create table if not exists analytics_search_terms (
+    channel_label text not null references channels(label) on delete cascade,
+    term text,
+    views bigint,
+    subs_gained bigint,
+    retention_score float,
+    date date,
+    primary key (channel_label, term, date)
+  )`;
+  
+  // traffic sources efficiency table
+  await sql`create table if not exists analytics_traffic_sources (
+    channel_label text not null references channels(label) on delete cascade,
+    source text,
+    views bigint,
+    likes bigint,
+    comments bigint,
+    subs_gained bigint,
+    date date,
+    primary key (channel_label, source, date)
+  )`;
 }
 
 export async function setRefreshToken(channel: "A"|"B", token: string) {

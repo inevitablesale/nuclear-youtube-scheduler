@@ -315,6 +315,51 @@ class ApiClient {
       throw new Error('Failed to fetch analytics');
     }
   }
+
+  // Advanced Analytics
+  async fetchRetention(channel: "A"|"B") {
+    try {
+      const response = await fetch(`/.netlify/functions/youtube-retention?channel=${channel}`);
+      if (!response.ok) throw new Error(await response.text());
+      return await response.json();
+    } catch (error) {
+      console.error('Fetch retention error:', error);
+      throw new Error('Failed to fetch retention data');
+    }
+  }
+
+  async fetchTraffic(channel: "A"|"B") {
+    try {
+      const response = await fetch(`/.netlify/functions/youtube-traffic?channel=${channel}`);
+      if (!response.ok) throw new Error(await response.text());
+      return await response.json();
+    } catch (error) {
+      console.error('Fetch traffic error:', error);
+      throw new Error('Failed to fetch traffic data');
+    }
+  }
+
+  async fetchKeywords(channel: "A"|"B") {
+    try {
+      const response = await fetch(`/.netlify/functions/youtube-keywords?channel=${channel}`);
+      if (!response.ok) throw new Error(await response.text());
+      return await response.json();
+    } catch (error) {
+      console.error('Fetch keywords error:', error);
+      throw new Error('Failed to fetch keywords data');
+    }
+  }
+
+  async fetchShorts(channel: "A"|"B") {
+    try {
+      const response = await fetch(`/.netlify/functions/youtube-shorts-index?channel=${channel}`);
+      if (!response.ok) throw new Error(await response.text());
+      return await response.json();
+    } catch (error) {
+      console.error('Fetch shorts error:', error);
+      throw new Error('Failed to fetch shorts data');
+    }
+  }
 }
 
 export const apiClient = new ApiClient();

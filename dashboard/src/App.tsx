@@ -17,6 +17,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { apiClient, Config, QueueItem, LogEntry } from "@/lib/api";
+import { AdvancedAnalytics } from "@/components/AdvancedAnalytics";
 
 // ----------------------------------------------
 // Helpers
@@ -905,6 +906,12 @@ export default function App() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Advanced Analytics */}
+                <div className="grid grid-cols-1 gap-6">
+                  <AdvancedAnalytics channel="A" channelName="Channel A (Ava)" />
+                  <AdvancedAnalytics channel="B" channelName="Channel B (Maya)" />
+                </div>
               </div>
             </TabsContent>
 
