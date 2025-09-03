@@ -68,6 +68,13 @@ export async function ensureMigrations() {
     date date,
     primary key (channel_label, source, date)
   )`;
+  
+  // app state table for general JSON storage
+  await sql`create table if not exists app_state (
+    key text primary key,
+    value text not null,
+    updated_at timestamptz default now()
+  )`;
 }
 
 export async function setRefreshToken(channel: "A"|"B", token: string) {
@@ -79,4 +86,21 @@ export async function setRefreshToken(channel: "A"|"B", token: string) {
 export async function getRefreshToken(channel: "A"|"B") {
   const rows = await sql`select refresh_token from oauth_tokens where channel_label=${channel}`;
   return rows[0]?.refresh_token as string | undefined;
+}
+
+// JSON storage functions for general app state
+export async function setJson<T>(key: string, value: T) {
+  await sql`insert into app_state (key, value, updated_at) 
+    values (${key}, ${JSON.stringify(value)}, now())
+    on conflict (key) do update set value=excluded.value, updated_at=now()`;
+}
+
+export async function getJson<T>(key: string, fallback: T): Promise<T> {
+  try {
+    const rows = await sql`select value from app_state where key=${key}`;
+    if (rows.length === 0) return fallback;
+    return JSON.parse(rows[0].value) as T;
+  } catch {
+    return fallback;
+  }
 }
