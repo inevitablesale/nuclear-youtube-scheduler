@@ -73,13 +73,13 @@ CREATIFY_API_KEY=your_creatify_api_key
 NUCLEAR_API_KEY=your_nuclear_api_key
 NUCLEAR_API_URL=https://nuclearsmm.com/api/v2
 
-# Google OAuth
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
 # RSS Configuration
 RSS_URL=your_rss_feed_url
 DAILY_PER_CHANNEL=2
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
 
 ### YouTube OAuth Setup
@@ -90,23 +90,30 @@ DAILY_PER_CHANNEL=2
    - Add authorized redirect URI: `https://your-site.netlify.app/.netlify/functions/oauth2callback`
 
 2. **Authorize Channels**:
-   - Visit: `https://your-site.netlify.app/.netlify/functions/oauth-start?channel=A`
-   - Complete OAuth for Channel A
-   - Repeat for Channel B with `?channel=B`
+   - **Channel A**: Visit `https://nuclear-youtube-scheduler.netlify.app/.netlify/functions/oauth-start?channel=A`
+   - **Channel B**: Visit `https://nuclear-youtube-scheduler.netlify.app/.netlify/functions/oauth-start?channel=B`
+   - Complete OAuth flow for each channel
+   - **Redirect URI**: `https://nuclear-youtube-scheduler.netlify.app/.netlify/functions/oauth2callback`
+   - **Required Scopes**:
+     - `https://www.googleapis.com/auth/youtube.upload`
+     - `https://www.googleapis.com/auth/youtube.force-ssl`
+     - `https://www.googleapis.com/auth/youtube.readonly`
+     - `https://www.googleapis.com/auth/yt-analytics.readonly`
+     - `https://www.googleapis.com/auth/yt-analytics-monetary.readonly`
 
 ## 📡 Netlify Functions
 
 ### Core Functions
-- `/.netlify/functions/status` - Get system status and last run info
-- `/.netlify/functions/run-now` - Manual trigger for RSS pipeline
-- `/.netlify/functions/worker` - Background job processor
+- `/.netlify/functions/status` - Get system status and last run summary
+- `/.netlify/functions/run-now` - Manual batch trigger for RSS pipeline
+- `/.netlify/functions/worker` - Background job processor (invoked by schedule-rss)
 
 ### OAuth Functions
 - `/.netlify/functions/oauth-start` - Initiate YouTube OAuth flow
 - `/.netlify/functions/oauth2callback` - Handle OAuth callback
 
 ### Scheduled Functions
-- `/.netlify/functions/schedule-rss` - Daily trigger (9:00 AM ET)
+- `/.netlify/functions/schedule-rss` - Daily trigger (9:00 AM ET) - invokes worker
 
 ## 🎮 Usage
 
@@ -119,7 +126,7 @@ DAILY_PER_CHANNEL=2
 
 ### Automated Operation
 
-- **Daily Schedule**: System runs automatically at 9:00 AM ET
+- **Daily Schedule**: System runs automatically at 9:00 AM ET (configured in `netlify.toml` with cron `0 13 * * *`)
 - **Smart Deduplication**: Avoids processing same articles for 5 days
 - **Agent Routing**: Automatically routes content to Ava or Maya based on source domain
 - **Full Pipeline**: RSS → Creatify → YouTube → Comments → SMM Orders
@@ -194,50 +201,29 @@ cd dashboard
 npm run dev
 ```
 
-## 🚀 Deployment Status
+## 🚀 Deployment Checklist
 
-### 1) **Environment variables** (Site → Settings → Environment):
+### 1) **Environment Variables** (Site → Settings → Environment)
+See the Environment Variables section above for the complete list.
 
-```bash
-OPENAI_API_KEY=...
-CREATIFY_API_ID=...
-CREATIFY_API_KEY=...
-NUCLEAR_API_KEY=...
-NUCLEAR_API_URL=https://nuclearsmm.com/api/v2
+### 2) **OAuth Connect** (one-time per channel)
+- **Channel A**: Visit `https://nuclear-youtube-scheduler.netlify.app/.netlify/functions/oauth-start?channel=A`
+- **Channel B**: Visit `https://nuclear-youtube-scheduler.netlify.app/.netlify/functions/oauth-start?channel=B`
+- Sign in with the Google account that owns each channel and accept scopes
+- You should see: "OK – saved refresh token for channel [A/B]"
 
-RSS_URL=<your merged SEO feed URL>
-DAILY_PER_CHANNEL=2
+### 3) **Scheduled Runs**
+- Netlify **Scheduled Function** (`schedule-rss`) fires daily at **9:00 AM ET** (cron: `0 13 * * *`)
+- Triggers the background **worker** function automatically
+- Manual trigger available via dashboard "Run Now" button → `/.netlify/functions/run-now`
 
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-```
+### 4) **Status Monitoring**
+- Dashboard **Status** button hits `/.netlify/functions/status`
+- Reads last run summary from Netlify Blobs (time, items, order responses)
+- Data retention: last run + "seen articles" cache to avoid duplicates for ~5 days
 
-### 2) **OAuth connect (one-time per channel)**
-- Visit: `https://nuclear-youtube-scheduler.netlify.app/.netlify/functions/oauth-start?channel=A`
-- Sign in with the Google account that owns **Channel A** and accept scopes.
-- You should see: "OK – saved refresh token for channel A."
-- Repeat for **Channel B**: `.../oauth-start?channel=B`
-
-### 3) **Scheduled runs**
-- We ship a Netlify **Scheduled Function** (`schedule-rss`) that fires daily at **9:00 AM ET** and triggers the background **worker**.
-- You can also trigger manually from the dashboard (Run Now) → `/.netlify/functions/run-now`.
-
-### 4) **Status**
-- The dashboard's **Status** button hits `/.netlify/functions/status`, which reads the last run summary stored in Netlify Blobs (time, items, order responses).
-- Data retention: last run + a simple "seen articles" cache to avoid duplicates for ~5 days.
-
-### 5) **Scopes used**
-
-```bash
-https://www.googleapis.com/auth/youtube.upload
-https://www.googleapis.com/auth/youtube.force-ssl
-https://www.googleapis.com/auth/youtube.readonly
-https://www.googleapis.com/auth/yt-analytics.readonly
-https://www.googleapis.com/auth/yt-analytics-monetary.readonly
-```
-
-> Notes: YouTube Data v3, YouTube Analytics, and YouTube Reporting **must be enabled** in the same GCP project as your OAuth client. The redirect URI should be:
-> `https://nuclear-youtube-scheduler.netlify.app/.netlify/functions/oauth2callback`
+### 5) **Required Google APIs**
+YouTube Data v3, YouTube Analytics, and YouTube Reporting **must be enabled** in the same GCP project as your OAuth client.
 
 ## 📄 License
 
