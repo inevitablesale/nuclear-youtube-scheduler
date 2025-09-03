@@ -42,7 +42,11 @@ interface RSSData {
   lastUpdated?: string;
 }
 
-export function RSSArticles() {
+interface RSSArticlesProps {
+  isProcessing?: boolean;
+}
+
+export function RSSArticles({ isProcessing = false }: RSSArticlesProps) {
   const [rssData, setRssData] = useState<RSSData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +68,17 @@ export function RSSArticles() {
   useEffect(() => {
     loadRSSData();
   }, []);
+
+  // Auto-refresh when processing completes
+  useEffect(() => {
+    if (!isProcessing && rssData) {
+      // Refresh data after processing completes
+      const timer = setTimeout(() => {
+        loadRSSData();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isProcessing]);
 
   const formatDate = (timestamp?: number) => {
     if (!timestamp) return 'Unknown date';

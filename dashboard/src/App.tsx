@@ -21,6 +21,7 @@ import { Slider } from "@/components/ui/slider";
 import { apiClient, Config, QueueItem, LogEntry } from "@/lib/api";
 import { AdvancedAnalytics } from "@/components/AdvancedAnalytics";
 import { RSSArticles } from "@/components/RSSArticles";
+import { ProcessingStatus } from "@/components/ProcessingStatus";
 
 // ----------------------------------------------
 // Helpers
@@ -599,7 +600,7 @@ export default function App() {
 
             {/* RSS Feed Tab */}
             <TabsContent value="rss" className="mt-6">
-              <RSSArticles />
+              <RSSArticles isProcessing={isRunning} />
             </TabsContent>
 
             {/* Channels Tab */}
@@ -702,80 +703,131 @@ export default function App() {
 
             {/* Queue Tab */}
             <TabsContent value="queue" className="mt-6">
-              <Card className="bg-white/10 border-white/20 text-white">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="flex items-center">
-                      <Database className="w-5 h-5 mr-2" />
-                      Processing Queue
-                    </span>
-                    <div className="flex items-center gap-2">
+              <div className="space-y-6">
+                {/* Processing Status */}
+                <ProcessingStatus 
+                  isRunning={isRunning}
+                  onRun={runQueue}
+                  onStop={() => setIsRunning(false)}
+                />
+
+                {/* Processing Logs */}
+                <Card className="bg-white/10 border-white/20 text-white">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center">
+                        <FileText className="w-5 h-5 mr-2" />
+                        Processing Logs
+                      </span>
                       <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
-                        {queue.length} items
+                        {logs.length} entries
                       </Badge>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={async () => {
-                          try {
-                            await apiClient.clearQueue();
-                            await loadData();
-                            addLog("Queue cleared", "info");
-                          } catch (error) {
-                            addLog(`Failed to clear queue: ${error}`, "error");
-                          }
-                        }}
-                        className="bg-red-500/20 border-red-500/30 text-red-300 hover:bg-red-500/30"
-                      >
-                        Clear All
-                      </Button>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {queue.length === 0 ? (
-                    <div className="text-center py-8 text-slate-400">
-                      <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>No items in queue</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {queue.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                            <div>
-                              <p className="text-white font-medium">{item.title}</p>
-                              <p className="text-sm text-slate-400">Agent: {item.agent}</p>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {logs.length === 0 ? (
+                      <div className="text-center py-8 text-slate-400">
+                        <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>No logs yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-96 overflow-y-auto">
+                        {logs.slice(-20).reverse().map((log) => (
+                          <div key={log.id} className="flex items-start space-x-3 p-3 bg-white/5 rounded-lg border border-white/10">
+                            <div className={`w-2 h-2 rounded-full mt-2 ${
+                              log.type === 'success' ? 'bg-green-400' :
+                              log.type === 'error' ? 'bg-red-400' :
+                              'bg-blue-400'
+                            }`}></div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-sm">{log.message}</p>
+                              <p className="text-xs text-slate-400">
+                                {new Date(log.timestamp).toLocaleString()}
+                              </p>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
-                              {item.status}
-                            </Badge>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={async () => {
-                                try {
-                                  await apiClient.removeFromQueue(item.id);
-                                  await loadData();
-                                  addLog(`Removed ${item.title} from queue`, "info");
-                                } catch (error) {
-                                  addLog(`Failed to remove item: ${error}`, "error");
-                                }
-                              }}
-                              className="bg-red-500/20 border-red-500/30 text-red-300 hover:bg-red-500/30"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Queue Items */}
+                <Card className="bg-white/10 border-white/20 text-white">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center">
+                        <Database className="w-5 h-5 mr-2" />
+                        Processing Queue
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
+                          {queue.length} items
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              await apiClient.clearQueue();
+                              await loadData();
+                              addLog("Queue cleared", "info");
+                            } catch (error) {
+                              addLog(`Failed to clear queue: ${error}`, "error");
+                            }
+                          }}
+                          className="bg-red-500/20 border-red-500/30 text-red-300 hover:bg-red-500/30"
+                        >
+                          Clear All
+                        </Button>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {queue.length === 0 ? (
+                      <div className="text-center py-8 text-slate-400">
+                        <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>No items in queue</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {queue.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                              <div>
+                                <p className="text-white font-medium">{item.title}</p>
+                                <p className="text-sm text-slate-400">Agent: {item.agent}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
+                                {item.status}
+                              </Badge>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={async () => {
+                                  try {
+                                    await apiClient.removeFromQueue(item.id);
+                                    await loadData();
+                                    addLog(`Removed ${item.title} from queue`, "info");
+                                  } catch (error) {
+                                    addLog(`Failed to remove item: ${error}`, "error");
+                                  }
+                                }}
+                                className="bg-red-500/20 border-red-500/30 text-red-300 hover:bg-red-500/30"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             {/* Settings Tab */}
