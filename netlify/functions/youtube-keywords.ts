@@ -28,13 +28,14 @@ export const handler: Handler = async (event) => {
     const end = new Date();
     const start = new Date(); start.setDate(end.getDate() - 28);
 
+    // Get search terms using supported dimensions
     const result = await yta.reports.query({
       ids: `channel==${channelId}`,
       startDate: toISO(start),
       endDate: toISO(end),
       metrics: "views",
-      dimensions: "insightTrafficSourceDetail",
-      filters: "insightTrafficSourceType==YT_SEARCH",
+      dimensions: "trafficSourceDetail",
+      filters: "trafficSourceType==YT_SEARCH",
       sort: "-views",
       maxResults: 20
     });

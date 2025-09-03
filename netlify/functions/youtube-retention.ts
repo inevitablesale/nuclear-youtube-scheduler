@@ -28,21 +28,23 @@ export const handler: Handler = async (event) => {
     const end = new Date();  
     const start = new Date(); start.setDate(end.getDate() - 28);
 
+    // Get basic video metrics instead of retention (retention requires specific video IDs)
     const result = await yta.reports.query({
       ids: `channel==${channelId}`,
       startDate: toISO(start),
       endDate: toISO(end),
-      metrics: "audienceWatchRatio,relativeRetentionPerformance",
-      dimensions: "elapsedVideoTimeRatio,video",
-      sort: "video"
+      metrics: "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage",
+      dimensions: "video",
+      sort: "-views",
+      maxResults: 10
     });
 
-    // persist in Neon
+    // persist in Neon (store video performance data)
     for (const row of result.data.rows || []) {
-      const [timeRatio, videoId, watchRatio, relPerf] = row;
+      const [videoId, views, minutesWatched, avgDuration, avgPercentage] = row;
       await sql`
         insert into analytics_retention (channel_label, video_id, time_offset_seconds, audience_watch_ratio, relative_performance)
-        values (${channel}, ${videoId}, ${Math.round(timeRatio * 100)}, ${watchRatio}, ${relPerf})
+        values (${channel}, ${videoId}, 0, ${avgPercentage || 0}, ${views || 0})
         on conflict do nothing
       `;
     }

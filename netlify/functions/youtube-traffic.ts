@@ -28,20 +28,21 @@ export const handler: Handler = async (event) => {
     const end = new Date();
     const start = new Date(); start.setDate(end.getDate() - 28);
 
+    // Get traffic source data using supported dimensions
     const result = await yta.reports.query({
       ids: `channel==${channelId}`,
       startDate: toISO(start),
       endDate: toISO(end),
-      metrics: "views,likes,comments,subscribersGained",
-      dimensions: "insightTrafficSourceType",
+      metrics: "views,estimatedMinutesWatched",
+      dimensions: "trafficSourceType",
       sort: "-views"
     });
 
     for (const row of result.data.rows || []) {
-      const [source, views, likes, comments, subsGained] = row;
+      const [source, views, minutesWatched] = row;
       await sql`
         insert into analytics_traffic_sources (channel_label, source, views, likes, comments, subs_gained, date)
-        values (${channel}, ${source}, ${views}, ${likes}, ${comments}, ${subsGained}, current_date)
+        values (${channel}, ${source}, ${views}, 0, 0, 0, current_date)
         on conflict do nothing
       `;
     }
