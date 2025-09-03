@@ -360,6 +360,29 @@ class ApiClient {
       throw new Error('Failed to fetch shorts data');
     }
   }
+
+  async fetchRSSFeed() {
+    try {
+      const response = await fetch(`/.netlify/functions/rss-feed`);
+      if (!response.ok) throw new Error(await response.text());
+      return await response.json();
+    } catch (error) {
+      console.error('Fetch RSS feed error:', error);
+      throw new Error('Failed to fetch RSS feed');
+    }
+  }
+
+  async fetchRSSArticles(channel?: "A"|"B"|"all") {
+    try {
+      const url = channel ? `/.netlify/functions/rss-articles?channel=${channel}` : `/.netlify/functions/rss-articles`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(await response.text());
+      return await response.json();
+    } catch (error) {
+      console.error('Fetch RSS articles error:', error);
+      throw new Error('Failed to fetch RSS articles');
+    }
+  }
 }
 
 export const apiClient = new ApiClient();

@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { apiClient, Config, QueueItem, LogEntry } from "@/lib/api";
 import { AdvancedAnalytics } from "@/components/AdvancedAnalytics";
+import { RSSArticles } from "@/components/RSSArticles";
 
 // ----------------------------------------------
 // Helpers
@@ -418,10 +419,14 @@ export default function App() {
           transition={{ delay: 0.2 }}
         >
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 bg-white/10 border-white/20">
+            <TabsList className="grid w-full grid-cols-6 bg-white/10 border-white/20">
               <TabsTrigger value="overview" className="data-[state=active]:bg-white/20">
                 <Activity className="w-4 h-4 mr-2" />
                 Overview
+              </TabsTrigger>
+              <TabsTrigger value="rss" className="data-[state=active]:bg-white/20">
+                <Rss className="w-4 h-4 mr-2" />
+                RSS Feed
               </TabsTrigger>
               <TabsTrigger value="channels" className="data-[state=active]:bg-white/20">
                 <Users className="w-4 h-4 mr-2" />
@@ -590,6 +595,11 @@ export default function App() {
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            {/* RSS Feed Tab */}
+            <TabsContent value="rss" className="mt-6">
+              <RSSArticles />
             </TabsContent>
 
             {/* Channels Tab */}
