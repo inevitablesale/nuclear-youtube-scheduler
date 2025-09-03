@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Component, ErrorInfo, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,41 @@ import { apiClient } from '@/lib/api';
 interface AdvancedAnalyticsProps {
   channel: "A" | "B";
   channelName: string;
+}
+
+// Error boundary component
+class AnalyticsErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): { hasError: boolean } {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Analytics component error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Card className="bg-white/10 border-white/20 text-white">
+          <CardContent className="p-6">
+            <p className="text-red-400 text-center">
+              Something went wrong loading analytics. Please try refreshing the page.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return this.props.children;
+  }
 }
 
 export function AdvancedAnalytics({ channel, channelName }: AdvancedAnalyticsProps) {
@@ -44,37 +79,42 @@ export function AdvancedAnalytics({ channel, channelName }: AdvancedAnalyticsPro
   const loadShorts = () => loadData('shorts', () => apiClient.fetchShorts(channel), setShortsData);
 
   // Process retention data for chart
-  const processedRetentionData = retentionData.map((row: any) => ({
-    timeOffset: row[0] * 100, // Convert to percentage
-    audienceWatchRatio: row[2],
-    relativePerformance: row[3]
-  }));
+  const processedRetentionData = Array.isArray(retentionData) ? retentionData.map((row: any) => ({
+    timeOffset: (row[0] || 0) * 100, // Convert to percentage
+    audienceWatchRatio: row[2] || 0,
+    relativePerformance: row[3] || 0
+  })) : [];
 
   // Process traffic data for radar chart
-  const processedTrafficData = trafficData.map((row: any) => ({
-    source: row[0],
-    views: row[1],
-    likes: row[2],
-    comments: row[3],
-    subsGained: row[4],
-    engagementRate: ((row[2] + row[3] + row[4]) / row[1] * 100).toFixed(1)
-  }));
+  const processedTrafficData = Array.isArray(trafficData) ? trafficData.map((row: any) => ({
+    source: row[0] || 'Unknown',
+    views: row[1] || 0,
+    likes: row[2] || 0,
+    comments: row[3] || 0,
+    subsGained: row[4] || 0,
+    engagementRate: row[1] > 0 ? ((row[2] + row[3] + row[4]) / row[1] * 100).toFixed(1) : '0.0'
+  })) : [];
 
   // Process keywords data for scatter chart
-  const processedKeywordsData = keywordsData.map((row: any) => ({
-    term: row[0],
-    views: row[1],
-    size: Math.min(Math.max(row[1] / 100, 5), 50) // Scale for bubble size
-  }));
+  const processedKeywordsData = Array.isArray(keywordsData) ? keywordsData.map((row: any) => ({
+    term: row[0] || 'Unknown',
+    views: row[1] || 0,
+    size: Math.min(Math.max((row[1] || 0) / 100, 5), 50) // Scale for bubble size
+  })) : [];
 
   // Process shorts data for leaderboard
-  const processedShortsData = shortsData.shorts?.map((short: any) => ({
+  const processedShortsData = Array.isArray(shortsData?.shorts) ? shortsData.shorts.map((short: any) => ({
     ...short,
-    title: short.title?.replace('#shorts', '').trim() || 'Untitled'
-  })) || [];
+    title: short.title?.replace('#shorts', '').trim() || 'Untitled',
+    views: short.views || 0,
+    velocityScore: short.velocityScore || 0,
+    estimatedHalfLife: short.estimatedHalfLife || 0,
+    likes: short.likes || 0
+  })) : [];
 
   return (
-    <div className="space-y-6">
+    <AnalyticsErrorBoundary>
+      <div className="space-y-6">
       {/* Retention Curves */}
       <Card className="bg-white/10 border-white/20 text-white">
         <CardHeader>
@@ -95,44 +135,48 @@ export function AdvancedAnalytics({ channel, channelName }: AdvancedAnalyticsPro
         </CardHeader>
         <CardContent>
           {processedRetentionData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={processedRetentionData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis 
-                  dataKey="timeOffset" 
-                  stroke="#9CA3AF"
-                  tickFormatter={(value) => `${value}%`}
-                />
-                <YAxis 
-                  stroke="#9CA3AF"
-                  domain={[0, 1]}
-                  tickFormatter={(value) => `${Math.round(value * 100)}%`}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1F2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px'
-                  }}
-                  formatter={(value: any) => [`${Math.round(value * 100)}%`, '']}
-                />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="audienceWatchRatio" 
-                  stroke="#6366f1" 
-                  strokeWidth={2}
-                  name="Audience Watch Ratio"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="relativePerformance" 
-                  stroke="#22c55e" 
-                  strokeWidth={2}
-                  name="Relative Performance"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <div style={{ width: '100%', height: '300px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={processedRetentionData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis 
+                    dataKey="timeOffset" 
+                    stroke="#9CA3AF"
+                    tickFormatter={(value) => `${value}%`}
+                  />
+                  <YAxis 
+                    stroke="#9CA3AF"
+                    domain={[0, 1]}
+                    tickFormatter={(value) => `${Math.round(value * 100)}%`}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px'
+                    }}
+                    formatter={(value: any) => [`${Math.round((value || 0) * 100)}%`, '']}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="audienceWatchRatio" 
+                    stroke="#6366f1" 
+                    strokeWidth={2}
+                    name="Audience Watch Ratio"
+                    dot={false}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="relativePerformance" 
+                    stroke="#22c55e" 
+                    strokeWidth={2}
+                    name="Relative Performance"
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
             <p className="text-slate-400 text-center py-8">Click "Load Retention" to fetch retention curves</p>
           )}
@@ -160,19 +204,21 @@ export function AdvancedAnalytics({ channel, channelName }: AdvancedAnalyticsPro
         <CardContent>
           {processedTrafficData.length > 0 ? (
             <div className="space-y-4">
-              <ResponsiveContainer width="100%" height={300}>
-                <RadarChart data={processedTrafficData}>
-                  <PolarGrid stroke="#374151" />
-                  <PolarAngleAxis dataKey="source" stroke="#9CA3AF" />
-                  <PolarRadiusAxis stroke="#9CA3AF" />
-                  <Radar 
-                    dataKey="views" 
-                    stroke="#f59e0b" 
-                    fill="#f59e0b" 
-                    fillOpacity={0.6}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
+              <div style={{ width: '100%', height: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={processedTrafficData}>
+                    <PolarGrid stroke="#374151" />
+                    <PolarAngleAxis dataKey="source" stroke="#9CA3AF" />
+                    <PolarRadiusAxis stroke="#9CA3AF" />
+                    <Radar 
+                      dataKey="views" 
+                      stroke="#f59e0b" 
+                      fill="#f59e0b" 
+                      fillOpacity={0.6}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
               
               {/* Traffic Sources Table */}
               <div className="overflow-x-auto">
@@ -227,34 +273,36 @@ export function AdvancedAnalytics({ channel, channelName }: AdvancedAnalyticsPro
         <CardContent>
           {processedKeywordsData.length > 0 ? (
             <div className="space-y-4">
-              <ResponsiveContainer width="100%" height={300}>
-                <ScatterChart data={processedKeywordsData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis 
-                    dataKey="views" 
-                    stroke="#9CA3AF"
-                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                  />
-                  <YAxis 
-                    dataKey="term" 
-                    type="category" 
-                    stroke="#9CA3AF"
-                    width={120}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1F2937', 
-                      border: '1px solid #374151',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Scatter dataKey="size" fill="#ef4444">
-                    {processedKeywordsData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill="#ef4444" />
-                    ))}
-                  </Scatter>
-                </ScatterChart>
-              </ResponsiveContainer>
+              <div style={{ width: '100%', height: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <ScatterChart data={processedKeywordsData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis 
+                      dataKey="views" 
+                      stroke="#9CA3AF"
+                      tickFormatter={(value) => `${((value || 0) / 1000).toFixed(0)}k`}
+                    />
+                    <YAxis 
+                      dataKey="term" 
+                      type="category" 
+                      stroke="#9CA3AF"
+                      width={120}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1F2937', 
+                        border: '1px solid #374151',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Scatter dataKey="size" fill="#ef4444">
+                      {processedKeywordsData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill="#ef4444" />
+                      ))}
+                    </Scatter>
+                  </ScatterChart>
+                </ResponsiveContainer>
+              </div>
               
               {/* Keywords List */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -357,6 +405,7 @@ export function AdvancedAnalytics({ channel, channelName }: AdvancedAnalyticsPro
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </AnalyticsErrorBoundary>
   );
 }
