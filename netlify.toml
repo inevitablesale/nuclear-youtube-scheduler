@@ -9,12 +9,12 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["googleapis", "axios", "xml2js", "openai"]
+  external_node_modules = ["googleapis","axios","xml2js","@netlify/blobs"]
 
+# Daily at 9:00 AM America/New_York (13:00 UTC outside DST) — adjust if needed
 [[scheduled.functions]]
-  # 9:00 AM America/New_York daily
   name = "schedule-rss"
-  cron = "0 13 * * *" # UTC equivalent of 9am ET (adjust for DST as needed)
+  cron = "0 13 * * *"
 
 [[redirects]]
   from = "/*"

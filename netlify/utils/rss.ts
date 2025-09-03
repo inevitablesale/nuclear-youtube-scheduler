@@ -17,11 +17,11 @@ export async function fetchFeed(url: string, max = 30): Promise<Entry[]> {
 }
 
 export function routeByAgent(entries: Entry[]) {
-  const avaDomains = ["ahrefs.com","moz.com","seo.com"];
-  const mayaDomains = ["developers.google.com","blog.google","searchengineland.com","seroundtable.com"];
-  const belongs = (u:string, domains:string[]) => domains.some(d => u.includes(d));
+  const ava = ["ahrefs.com","moz.com","seo.com"];
+  const maya = ["developers.google.com","blog.google","searchengineland.com","seroundtable.com"];
+  const belongs = (u:string, list:string[]) => list.some(d => u.includes(d));
   return {
-    Ava: entries.filter(e => belongs(e.link, avaDomains)),
-    Maya: entries.filter(e => belongs(e.link, mayaDomains)),
+    Ava: entries.filter(e => belongs(e.link, ava)),
+    Maya: entries.filter(e => belongs(e.link, maya)),
   };
 }

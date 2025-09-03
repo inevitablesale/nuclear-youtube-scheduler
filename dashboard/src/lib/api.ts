@@ -241,9 +241,39 @@ class ApiClient {
   }
 
   async initiateOAuth(channel: 'A' | 'B') {
-    const authUrl = `/.netlify/functions/oauth2callback?state=channel${channel}`;
+    const authUrl = `/.netlify/functions/oauth-start?channel=${channel}`;
     window.open(authUrl, '_blank');
     return { success: true, authUrl };
+  }
+
+  // New optimized functions
+  async fetchStatus() {
+    try {
+      const response = await fetch('/.netlify/functions/status');
+      const data = await response.json();
+      return {
+        lastRun: data.lastRun?.at || "never",
+        itemsCount: data.lastRun?.items?.length || 0,
+        items: data.lastRun?.items || []
+      };
+    } catch (error) {
+      console.error('Fetch status error:', error);
+      throw new Error('Failed to fetch status');
+    }
+  }
+
+  async runNow() {
+    try {
+      const response = await fetch('/.netlify/functions/run-now', { method: 'POST' });
+      if (response.ok) {
+        return { success: true, message: 'Worker accepted' };
+      } else {
+        throw new Error('Worker failed to start');
+      }
+    } catch (error) {
+      console.error('Run now error:', error);
+      throw new Error('Failed to start worker');
+    }
   }
 }
 

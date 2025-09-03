@@ -14,11 +14,12 @@ End-to-end automated YouTube Shorts pipeline with AI-powered content generation 
 
 ## 🏗️ Architecture
 
+**Netlify Serverless Architecture:**
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   React UI      │    │   FastAPI       │    │   Python        │
-│   Dashboard     │◄──►│   Backend       │◄──►│   Pipeline      │
-│   (Port 5173)   │    │   (Port 8000)   │    │   (RSS→Video)   │
+│   React UI      │    │   Netlify       │    │   External      │
+│   Dashboard     │◄──►│   Functions     │◄──►│   APIs          │
+│   (Netlify)     │    │   (Serverless)  │    │   (YouTube, etc)│
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
@@ -231,6 +232,51 @@ curl http://localhost:8000/health
 # View API documentation
 open http://localhost:8000/docs
 ```
+
+## Netlify Deployment
+
+### 1) **Environment variables** (Site → Settings → Environment):
+
+```bash
+OPENAI_API_KEY=...
+CREATIFY_API_ID=...
+CREATIFY_API_KEY=...
+NUCLEAR_API_KEY=...
+NUCLEAR_API_URL=https://nuclearsmm.com/api/v2
+
+RSS_URL=<your merged SEO feed URL>
+DAILY_PER_CHANNEL=2
+
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+```
+
+### 2) **OAuth connect (one-time per channel)**
+- Visit: `https://nuclear-youtube-scheduler.netlify.app/.netlify/functions/oauth-start?channel=A`
+- Sign in with the Google account that owns **Channel A** and accept scopes.
+- You should see: "OK – saved refresh token for channel A."
+- Repeat for **Channel B**: `.../oauth-start?channel=B`
+
+### 3) **Scheduled runs**
+- We ship a Netlify **Scheduled Function** (`schedule-rss`) that fires daily at **9:00 AM ET** and triggers the background **worker**.
+- You can also trigger manually from the dashboard (Run Now) → `/.netlify/functions/run-now`.
+
+### 4) **Status**
+- The dashboard's **Status** button hits `/.netlify/functions/status`, which reads the last run summary stored in Netlify Blobs (time, items, order responses).
+- Data retention: last run + a simple "seen articles" cache to avoid duplicates for ~5 days.
+
+### 5) **Scopes used**
+
+```bash
+https://www.googleapis.com/auth/youtube.upload
+https://www.googleapis.com/auth/youtube.force-ssl
+https://www.googleapis.com/auth/youtube.readonly
+https://www.googleapis.com/auth/yt-analytics.readonly
+https://www.googleapis.com/auth/yt-analytics-monetary.readonly
+```
+
+> Notes: YouTube Data v3, YouTube Analytics, and YouTube Reporting **must be enabled** in the same GCP project as your OAuth client. The redirect URI should be:
+> `https://nuclear-youtube-scheduler.netlify.app/.netlify/functions/oauth2callback`
 
 ## 📄 License
 

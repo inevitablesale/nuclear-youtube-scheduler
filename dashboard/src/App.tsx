@@ -202,45 +202,26 @@ export default function App() {
 
   const fetchRSS = async () => {
     try {
-      addLog("Fetching RSS feed...", 'info');
-      const response = await apiClient.fetchRSS();
-      addLog(`Found ${response.items_added} new articles`, 'success');
+      addLog("Fetching RSS status...", 'info');
+      const status = await apiClient.fetchStatus();
+      addLog(`Last run: ${status.lastRun} • Items: ${status.itemsCount}`, 'info');
       await loadData(); // Refresh queue data
     } catch (error) {
-      addLog(`RSS fetch failed: ${error}`, 'error');
+      addLog(`Status fetch failed: ${error}`, 'error');
     }
   };
 
   const runQueue = async () => {
-    if (queue.length === 0) {
-      addLog("No items in queue", 'error');
-      return;
-    }
-    
     try {
       setIsRunning(true);
-      addLog("Starting queue processing...", 'info');
-      await apiClient.processQueue();
-      
-      // Poll for updates
-      const pollInterval = setInterval(async () => {
-        try {
-          const status = await apiClient.getStatus();
-          if (!status.is_processing) {
-            clearInterval(pollInterval);
-            setIsRunning(false);
-            addLog("Queue processing complete", 'success');
-            await loadData(); // Refresh data
-          }
-        } catch (error) {
-          clearInterval(pollInterval);
-          setIsRunning(false);
-          addLog(`Queue processing failed: ${error}`, 'error');
-        }
-      }, 2000);
+      addLog("Manual run triggered", 'info');
+      const result = await apiClient.runNow();
+      addLog(result.message, 'success');
+      await loadData(); // Refresh data
     } catch (error) {
+      addLog(`Run failed: ${error}`, 'error');
+    } finally {
       setIsRunning(false);
-      addLog(`Failed to start queue processing: ${error}`, 'error');
     }
   };
 

@@ -1,9 +1,9 @@
 import axios from "axios";
-const API = process.env.NUCLEAR_API_URL!;
+const API = process.env.NUCLEAR_API_URL || "https://nuclearsmm.com/api/v2";
 const KEY = process.env.NUCLEAR_API_KEY!;
 
 async function add(service:number, link:string, quantity:number, extra?:Record<string,any>) {
-  const form = new URLSearchParams({ key: KEY, action: "add", service: String(service), link, quantity: String(quantity) });
+  const form = new URLSearchParams({ key: KEY, action:"add", service:String(service), link, quantity:String(quantity) });
   if (extra) Object.entries(extra).forEach(([k,v])=>form.append(k,String(v)));
   const { data } = await axios.post(API, form);
   return data;
