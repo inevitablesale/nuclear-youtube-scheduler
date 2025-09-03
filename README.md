@@ -25,106 +25,111 @@ End-to-end automated YouTube Shorts pipeline with AI-powered content generation 
 
 ## 🚀 Quick Start
 
-### 1. Backend Setup
+### Netlify Deployment (Recommended)
+
+1. **Deploy to Netlify**:
+   - Connect your GitHub repo to Netlify
+   - Netlify will auto-detect the React frontend and Netlify Functions
+   - Set environment variables in Netlify dashboard
+   - Functions will be automatically deployed
+
+2. **Configure Environment Variables**:
+   - Go to Netlify dashboard → Site Settings → Environment Variables
+   - Add all required API keys and configuration
+   - Redeploy to activate the functions
+
+3. **Authorize YouTube Channels**:
+   - Open your Netlify dashboard URL
+   - Go to YouTube tab
+   - Click "Authorize Channel A" and "Authorize Channel B"
+   - Complete OAuth flow for each channel
+
+### Local Development
 
 ```bash
-# Install Python dependencies
-pip install -r requirements.txt
+# Start Netlify Dev Locally
+npx netlify dev
 
-# Start the FastAPI backend
-python start_backend.py
-```
-
-The API will be available at:
-- **API Server**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
-
-### 2. Frontend Setup
-
-```bash
-# Navigate to dashboard directory
+# Or Start Frontend Only
 cd dashboard
-
-# Install Node.js dependencies
 npm install
-
-# Start the React development server
 npm run dev
 ```
 
-The dashboard will be available at: http://localhost:5173
+### Environment Variables
 
-### 3. Configuration
+Set these in Netlify → Site Settings → Environment Variables:
 
-1. **Copy configuration template**:
-   ```bash
-   cp config.example.json config.json
-   ```
+```bash
+# OpenAI
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4o-mini
 
-2. **Set environment variables**:
-   ```bash
-   export OPENAI_API_KEY="sk-..."
-   export CREATIFY_API_ID="xxxx"
-   export CREATIFY_API_KEY="yyyy"
-   ```
+# Creatify
+CREATIFY_API_ID=your_creatify_api_id
+CREATIFY_API_KEY=your_creatify_api_key
 
-3. **Configure in dashboard**:
-   - Open http://localhost:5173
-   - Go to Config tab
-   - Enter your API keys
-   - Configure agents, RSS feeds, and YouTube channels
+# NuclearSMM
+NUCLEAR_API_KEY=your_nuclear_api_key
+NUCLEAR_API_URL=https://nuclearsmm.com/api/v2
 
-## 📡 API Endpoints
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 
-### Configuration
-- `GET /config` - Get current configuration
-- `POST /config` - Update configuration
+# RSS Configuration
+RSS_URL=your_rss_feed_url
+DAILY_PER_CHANNEL=2
+```
 
-### RSS & Queue
-- `POST /rss/fetch` - Fetch RSS feeds and populate queue
-- `GET /queue` - Get current queue
-- `DELETE /queue/{item_id}` - Remove specific item
-- `DELETE /queue` - Clear entire queue
-- `POST /queue/process` - Start processing queue
+### YouTube OAuth Setup
 
-### Monitoring
-- `GET /logs` - Get activity logs
-- `DELETE /logs` - Clear logs
-- `GET /status` - Get system status
-- `GET /health` - Health check
+1. **Create Google Cloud Project**:
+   - Enable YouTube Data API v3
+   - Create OAuth 2.0 credentials
+   - Add authorized redirect URI: `https://your-site.netlify.app/.netlify/functions/oauth2callback`
+
+2. **Authorize Channels**:
+   - Visit: `https://your-site.netlify.app/.netlify/functions/oauth-start?channel=A`
+   - Complete OAuth for Channel A
+   - Repeat for Channel B with `?channel=B`
+
+## 📡 Netlify Functions
+
+### Core Functions
+- `/.netlify/functions/status` - Get system status and last run info
+- `/.netlify/functions/run-now` - Manual trigger for RSS pipeline
+- `/.netlify/functions/worker` - Background job processor
+
+### OAuth Functions
+- `/.netlify/functions/oauth-start` - Initiate YouTube OAuth flow
+- `/.netlify/functions/oauth2callback` - Handle OAuth callback
+
+### Scheduled Functions
+- `/.netlify/functions/schedule-rss` - Daily trigger (9:00 AM ET)
 
 ## 🎮 Usage
 
 ### Via Dashboard (Recommended)
 
-1. **Configure**: Set up API keys, agents, and channels in the dashboard
-2. **Fetch RSS**: Click "Fetch RSS" to populate the queue with fresh content
-3. **Process**: Click "Run Queue" to start automated video creation and upload
+1. **Authorize YouTube**: Complete OAuth flow for Channel A and Channel B
+2. **Check Status**: Click "Fetch RSS" to see last run status and item count
+3. **Manual Run**: Click "Run Queue" to trigger immediate processing
 4. **Monitor**: Watch real-time logs and queue status
 
-### Via API
+### Automated Operation
 
-```bash
-# Fetch RSS feeds
-curl -X POST http://localhost:8000/rss/fetch
+- **Daily Schedule**: System runs automatically at 9:00 AM ET
+- **Smart Deduplication**: Avoids processing same articles for 5 days
+- **Agent Routing**: Automatically routes content to Ava or Maya based on source domain
+- **Full Pipeline**: RSS → Creatify → YouTube → Comments → SMM Orders
 
-# Check queue status
-curl http://localhost:8000/queue
+### Expected Output
 
-# Start processing
-curl -X POST http://localhost:8000/queue/process
-```
-
-### Via Python Scripts
-
-```bash
-# Run RSS pipeline
-python run_from_rss.py
-
-# Run local file upload
-python run_daily.py
-```
+Each run processes:
+- **2 Shorts per channel** (4 total)
+- **AI-generated author comments** on each video
+- **SMM orders**: 500 views, 15 likes, 15 pinned comment likes, 2 custom comments
 
 ## 🔧 Configuration
 
@@ -224,16 +229,7 @@ cd dashboard
 npm run dev
 ```
 
-### API Testing
-```bash
-# Test health endpoint
-curl http://localhost:8000/health
-
-# View API documentation
-open http://localhost:8000/docs
-```
-
-## Netlify Deployment
+## 🚀 Deployment Status
 
 ### 1) **Environment variables** (Site → Settings → Environment):
 
