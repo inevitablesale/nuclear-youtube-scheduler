@@ -9,7 +9,31 @@ export async function ensureMigrations() {
     refresh_token text not null,
     updated_at timestamptz default now()
   )`;
-  // add/keep your runs/videos/smm_orders tables here (as we outlined earlier)
+  
+  // channels table for YouTube channel metadata
+  await sql`create table if not exists channels (
+    label text primary key,
+    youtube_channel_id text,
+    title text,
+    handle text,
+    country text,
+    created_at timestamptz default now()
+  )`;
+  
+  // analytics daily rollup table
+  await sql`create table if not exists analytics_daily (
+    channel_label text not null references channels(label) on delete cascade,
+    video_id text,
+    date date not null,
+    views bigint,
+    likes bigint,
+    comments bigint,
+    shares bigint,
+    subs_gained bigint,
+    subs_lost bigint,
+    watch_time_seconds bigint,
+    primary key (channel_label, date, video_id)
+  )`;
 }
 
 export async function setRefreshToken(channel: "A"|"B", token: string) {

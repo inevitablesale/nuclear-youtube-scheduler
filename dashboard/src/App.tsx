@@ -4,7 +4,7 @@ import {
   Settings, Play, Pause, Database, Rss, Youtube, 
   Bot, Gauge, KeyRound, Eye, EyeOff, 
   Trash2, FileText, CheckCircle2, AlertCircle, 
-  Download, Globe2 
+  Download, Globe2, BarChart3, TrendingUp, Users, Eye as EyeIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -127,6 +127,14 @@ export default function App() {
     channelB: { authorized: false }
   });
 
+  const [channelAnalytics, setChannelAnalytics] = useState<{
+    A: any;
+    B: any;
+  }>({
+    A: null,
+    B: null
+  });
+
   // Check API connection on mount
   useEffect(() => {
     checkApiConnection();
@@ -150,6 +158,20 @@ export default function App() {
       addLog(`OAuth window opened for Channel ${channel}. Complete authorization and return here.`, 'info');
     } catch (error) {
       addLog(`Failed to initiate OAuth for Channel ${channel}: ${error}`, 'error');
+    }
+  };
+
+  const loadChannelAnalytics = async (channel: 'A' | 'B') => {
+    try {
+      addLog(`Loading analytics for Channel ${channel}...`, 'info');
+      const analytics = await apiClient.fetchChannelInfo(channel);
+      setChannelAnalytics(prev => ({
+        ...prev,
+        [channel]: analytics
+      }));
+      addLog(`Analytics loaded for Channel ${channel}`, 'success');
+    } catch (error) {
+      addLog(`Failed to load analytics for Channel ${channel}: ${error}`, 'error');
     }
   };
 
@@ -393,7 +415,7 @@ export default function App() {
           transition={{ delay: 0.2 }}
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-6 bg-white/10 border-white/20">
+            <TabsList className="grid w-full grid-cols-7 bg-white/10 border-white/20">
               <TabsTrigger value="config" className="text-white data-[state=active]:bg-white/20">
                 <Settings className="w-4 h-4 mr-2" />
                 Config
@@ -409,6 +431,10 @@ export default function App() {
               <TabsTrigger value="youtube" className="text-white data-[state=active]:bg-white/20">
                 <Youtube className="w-4 h-4 mr-2" />
                 YouTube
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="text-white data-[state=active]:bg-white/20">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Analytics
               </TabsTrigger>
               <TabsTrigger value="queue" className="text-white data-[state=active]:bg-white/20">
                 <Database className="w-4 h-4 mr-2" />
@@ -782,6 +808,103 @@ export default function App() {
                     </Card>
                   ))}
                 </div>
+              </div>
+            </TabsContent>
+
+            {/* Analytics Tab */}
+            <TabsContent value="analytics" className="mt-6">
+              <div className="space-y-6">
+                <Card className="bg-white/10 border-white/20 text-white">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <BarChart3 className="w-5 h-5 mr-2" />
+                      YouTube Analytics Dashboard
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Channel A Analytics */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold">Channel A (Ava)</h3>
+                          <Button
+                            onClick={() => loadChannelAnalytics('A')}
+                            className="bg-blue-500/20 border-blue-500/30 text-blue-300 hover:bg-blue-500/30"
+                            size="sm"
+                          >
+                            <TrendingUp className="w-4 h-4 mr-2" />
+                            Load Analytics
+                          </Button>
+                        </div>
+                        {channelAnalytics.A ? (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="bg-white/5 p-3 rounded-lg">
+                                <p className="text-sm text-slate-400">Subscribers</p>
+                                <p className="text-lg font-semibold">{channelAnalytics.A.subscribers || 'N/A'}</p>
+                              </div>
+                              <div className="bg-white/5 p-3 rounded-lg">
+                                <p className="text-sm text-slate-400">Total Views</p>
+                                <p className="text-lg font-semibold">{channelAnalytics.A.totalViews || 'N/A'}</p>
+                              </div>
+                            </div>
+                            {channelAnalytics.A.lastVideo && (
+                              <div className="bg-white/5 p-3 rounded-lg">
+                                <p className="text-sm text-slate-400">Last Video</p>
+                                <p className="text-sm font-medium">{channelAnalytics.A.lastVideo.title}</p>
+                                <p className="text-xs text-slate-500">
+                                  {new Date(channelAnalytics.A.lastVideo.publishedAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-400">Click "Load Analytics" to fetch channel data</p>
+                        )}
+                      </div>
+
+                      {/* Channel B Analytics */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold">Channel B (Maya)</h3>
+                          <Button
+                            onClick={() => loadChannelAnalytics('B')}
+                            className="bg-blue-500/20 border-blue-500/30 text-blue-300 hover:bg-blue-500/30"
+                            size="sm"
+                          >
+                            <TrendingUp className="w-4 h-4 mr-2" />
+                            Load Analytics
+                          </Button>
+                        </div>
+                        {channelAnalytics.B ? (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="bg-white/5 p-3 rounded-lg">
+                                <p className="text-sm text-slate-400">Subscribers</p>
+                                <p className="text-lg font-semibold">{channelAnalytics.B.subscribers || 'N/A'}</p>
+                              </div>
+                              <div className="bg-white/5 p-3 rounded-lg">
+                                <p className="text-sm text-slate-400">Total Views</p>
+                                <p className="text-lg font-semibold">{channelAnalytics.B.totalViews || 'N/A'}</p>
+                              </div>
+                            </div>
+                            {channelAnalytics.B.lastVideo && (
+                              <div className="bg-white/5 p-3 rounded-lg">
+                                <p className="text-sm text-slate-400">Last Video</p>
+                                <p className="text-sm font-medium">{channelAnalytics.B.lastVideo.title}</p>
+                                <p className="text-xs text-slate-500">
+                                  {new Date(channelAnalytics.B.lastVideo.publishedAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-400">Click "Load Analytics" to fetch channel data</p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
 

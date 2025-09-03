@@ -292,6 +292,29 @@ class ApiClient {
       throw new Error('Failed to start worker');
     }
   }
+
+  // YouTube Analytics
+  async fetchChannelInfo(channel: "A"|"B") {
+    try {
+      const response = await fetch(`/.netlify/functions/youtube-channel-info?channel=${channel}`);
+      if (!response.ok) throw new Error(await response.text());
+      return await response.json();
+    } catch (error) {
+      console.error('Fetch channel info error:', error);
+      throw new Error('Failed to fetch channel info');
+    }
+  }
+
+  async fetchAnalytics(channel: "A"|"B") {
+    try {
+      const response = await fetch(`/.netlify/functions/youtube-analytics?channel=${channel}`);
+      if (!response.ok) throw new Error(await response.text());
+      return await response.json();
+    } catch (error) {
+      console.error('Fetch analytics error:', error);
+      throw new Error('Failed to fetch analytics');
+    }
+  }
 }
 
 export const apiClient = new ApiClient();
