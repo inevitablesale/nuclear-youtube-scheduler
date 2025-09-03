@@ -1,18 +1,18 @@
 import type { Handler } from "@netlify/functions";
-import { blobs } from "@netlify/blobs";
+import { getStore } from "@netlify/blobs";
 
 export const handler: Handler = async () => {
   try {
-    const b = await blobs();
-    const a = await b.getJSON<{refresh_token:string}>("nuclear-oauth-refresh:A");
-    const c = await b.getJSON<{refresh_token:string}>("nuclear-oauth-refresh:B");
+    const store = await getStore("nuclear-oauth-refresh");
+    const a = await store.getJSON<{refresh_token:string}>("A");
+    const b = await store.getJSON<{refresh_token:string}>("B");
     return {
       statusCode: 200,
       body: JSON.stringify({
         ok: true,
         authorized: {
           A: !!a?.refresh_token,
-          B: !!c?.refresh_token,
+          B: !!b?.refresh_token,
         },
       }),
     };

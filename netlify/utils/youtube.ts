@@ -1,13 +1,13 @@
 import { google } from "googleapis";
 import axios from "axios";
 import fs from "fs/promises";
-import { blobs } from "@netlify/blobs";
+import { getStore } from "@netlify/blobs";
 
 type Chan = "A"|"B";
 
 async function refreshToken(chan: Chan) {
-  const b = await blobs();
-  const rec = await b.getJSON<{ refresh_token: string }>(`nuclear-oauth-refresh:${chan}`);
+  const store = await getStore("nuclear-oauth-refresh");
+  const rec = await store.getJSON<{ refresh_token: string }>(chan);
   if (!rec?.refresh_token) throw new Error(`No refresh_token for channel ${chan}. Run OAuth connect.`);
   return rec.refresh_token;
 }
