@@ -34,7 +34,7 @@ export const handler: Handler = async (event) => {
       startDate: toISO(start),
       endDate: toISO(end),
       metrics: "views,estimatedMinutesWatched",
-      dimensions: "trafficSourceType",
+      dimensions: "insightTrafficSourceType",
       sort: "-views"
     });
 

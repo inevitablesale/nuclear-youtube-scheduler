@@ -34,8 +34,8 @@ export const handler: Handler = async (event) => {
       startDate: toISO(start),
       endDate: toISO(end),
       metrics: "views",
-      dimensions: "trafficSourceDetail",
-      filters: "trafficSourceType==YT_SEARCH",
+      dimensions: "insightTrafficSourceDetail",
+      filters: "insightTrafficSourceType==YT_SEARCH",
       sort: "-views",
       maxResults: 20
     });
