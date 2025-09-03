@@ -197,12 +197,10 @@ npx serve -s dist -l 3000
 ### Environment Variables
 ```bash
 # Required
-OPENAI_API_KEY=sk-...
-CREATIFY_API_ID=xxxx
-CREATIFY_API_KEY=yyyy
-
-# Optional
-NUCLEARSMM_API_KEY=7034688f756e58db675073e27c52ec79
+OPENAI_API_KEY=your_openai_api_key
+CREATIFY_API_ID=your_creatify_api_id
+CREATIFY_API_KEY=your_creatify_api_key
+NUCLEAR_API_KEY=your_nuclear_api_key
 ```
 
 ## 📝 Notes
@@ -214,17 +212,12 @@ NUCLEARSMM_API_KEY=7034688f756e58db675073e27c52ec79
 
 ## 🛠️ Development
 
-### Backend Development
+### Local Development
 ```bash
-# Start with auto-reload
-python start_backend.py
+# Start Netlify Dev (includes functions)
+npx netlify dev
 
-# Or directly with uvicorn
-uvicorn api_server:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Frontend Development
-```bash
+# Or frontend only
 cd dashboard
 npm run dev
 ```
