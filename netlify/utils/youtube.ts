@@ -5,8 +5,21 @@ import { getStore } from "@netlify/blobs";
 
 type Chan = "A"|"B";
 
+async function openOAuthStore() {
+  try {
+    // Works if Blobs is enabled for the site
+    return await getStore("nuclear-oauth-refresh");
+  } catch (e) {
+    // Fallback: use explicit credentials from env
+    const siteID = process.env.NETLIFY_SITE_ID || process.env.SITE_ID;
+    const token = process.env.NETLIFY_API_TOKEN || process.env.NETLIFY_ACCESS_TOKEN;
+    if (!siteID || !token) throw e;
+    return await getStore({ name: "nuclear-oauth-refresh", siteID, token });
+  }
+}
+
 async function refreshToken(chan: Chan) {
-  const store = await getStore("nuclear-oauth-refresh");
+  const store = await openOAuthStore();
   const rec = await store.getJSON<{ refresh_token: string }>(chan);
   if (!rec?.refresh_token) throw new Error(`No refresh_token for channel ${chan}. Run OAuth connect.`);
   return rec.refresh_token;

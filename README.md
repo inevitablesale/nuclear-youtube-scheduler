@@ -80,7 +80,26 @@ DAILY_PER_CHANNEL=2
 # Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# Netlify Blobs (optional - for fallback if Blobs not enabled)
+NETLIFY_SITE_ID=your_site_id
+NETLIFY_API_TOKEN=your_personal_access_token
 ```
+
+### Enable Netlify Blobs
+
+**Option A (Recommended)**: Enable Blobs for automatic provisioning
+1. Go to Netlify Dashboard → Your Site → Storage & databases → Blobs
+2. Click "Enable" 
+3. Redeploy your site
+
+**Option B (Fallback)**: Use explicit credentials
+1. Get your Site ID: Site Settings → General → Site details → API ID
+2. Create Personal Access Token: User Settings → Applications → New access token
+3. Add environment variables: `NETLIFY_SITE_ID` and `NETLIFY_API_TOKEN`
+4. Redeploy your site
+
+The code includes automatic fallback handling, so either approach will work.
 
 ### YouTube OAuth Setup
 
