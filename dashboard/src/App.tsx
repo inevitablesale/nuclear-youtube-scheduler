@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { 
   Settings, Play, Pause, Database, Rss, Youtube, 
@@ -17,8 +17,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { apiClient, Config, QueueItem, LogEntry } from "@/lib/api";
-// Dynamic import for analytics to reduce initial bundle size
-const AdvancedAnalytics = React.lazy(() => import("@/components/AdvancedAnalytics"));
+// Import analytics component directly to avoid dynamic import issues
+import { AdvancedAnalytics } from "@/components/AdvancedAnalytics";
 
 // ----------------------------------------------
 // Helpers
@@ -910,12 +910,8 @@ export default function App() {
 
                 {/* Advanced Analytics */}
                 <div className="grid grid-cols-1 gap-6">
-                  <Suspense fallback={<div className="text-center text-slate-400 p-8">Loading analytics...</div>}>
-                    <AdvancedAnalytics channel="A" channelName="Channel A (Ava)" />
-                  </Suspense>
-                  <Suspense fallback={<div className="text-center text-slate-400 p-8">Loading analytics...</div>}>
-                    <AdvancedAnalytics channel="B" channelName="Channel B (Maya)" />
-                  </Suspense>
+                  <AdvancedAnalytics channel="A" channelName="Channel A (Ava)" />
+                  <AdvancedAnalytics channel="B" channelName="Channel B (Maya)" />
                 </div>
               </div>
             </TabsContent>
