@@ -140,6 +140,11 @@ export default function App() {
     try {
       const authStatus = await apiClient.getAuthStatus();
       setYoutubeAuth(authStatus);
+      
+      // Log debug info to console
+      if (authStatus.debug) {
+        console.log('YouTube Auth Debug Info:', authStatus.debug);
+      }
     } catch (error) {
       console.error('Failed to load YouTube auth status:', error);
     }
