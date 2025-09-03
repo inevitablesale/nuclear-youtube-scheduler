@@ -3,7 +3,7 @@ import { fetchFeed, routeByAgent } from "../utils/rss";
 import { buildShortFromArticle } from "../utils/creatify";
 import { uploadShortFromUrl, postAuthorComment } from "../utils/youtube";
 import { orderBundle } from "../utils/smm";
-import { setJson, getJson } from "../utils/store";
+import { setJson, getJson, ensureMigrations } from "../utils/db";
 import OpenAI from "openai";
 
 const OA_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -16,6 +16,7 @@ const MAYA_AUDIENCE = `You are Maya, OEM Program Insider...`;
 const seenWindowDays = 5;
 
 export const handler: Handler = async () => {
+  await ensureMigrations();
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
   const seen = await getJson<Record<string,string>>("seen-articles", {});
