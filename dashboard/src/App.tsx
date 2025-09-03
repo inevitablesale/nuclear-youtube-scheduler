@@ -342,7 +342,7 @@ export default function App() {
                   <p className="text-sm text-slate-400">Fetches articles from RSS feeds</p>
                   <div className="mt-2">
                     <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                      {state.rss.enabled ? 'Active' : 'Disabled'}
+                      {state.rss?.enabled ? 'Active' : 'Disabled'}
                     </Badge>
                   </div>
                 </div>
@@ -402,7 +402,7 @@ export default function App() {
                   <p className="text-sm text-slate-400">Boosts engagement & views</p>
                   <div className="mt-2">
                     <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30">
-                      {state.nuclear.enabled ? 'Active' : 'Disabled'}
+                      {state.nuclear?.enabled ? 'Active' : 'Disabled'}
                     </Badge>
                   </div>
                 </div>
@@ -552,8 +552,8 @@ export default function App() {
                           <Rss className="w-5 h-5 text-blue-400 mr-3" />
                           <span>RSS Feed</span>
                         </div>
-                        <Badge className={state.rss.enabled ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}>
-                          {state.rss.enabled ? 'Active' : 'Disabled'}
+                        <Badge className={state.rss?.enabled ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}>
+                          {state.rss?.enabled ? 'Active' : 'Disabled'}
                         </Badge>
                       </div>
                       
@@ -582,8 +582,8 @@ export default function App() {
                           <Zap className="w-5 h-5 text-orange-400 mr-3" />
                           <span>SMM Nuclear</span>
                         </div>
-                        <Badge className={state.nuclear.enabled ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}>
-                          {state.nuclear.enabled ? 'Active' : 'Disabled'}
+                        <Badge className={state.nuclear?.enabled ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}>
+                          {state.nuclear?.enabled ? 'Active' : 'Disabled'}
                         </Badge>
                       </div>
                     </div>
@@ -782,31 +782,31 @@ export default function App() {
                   <CardContent className="space-y-4">
                     <div>
                       <Label className="text-slate-300">RSS URL</Label>
-                      <Input
-                        value={state.rss.url}
-                        onChange={e => updateState('rss.url', e.target.value)}
-                        placeholder="https://example.com/feed.xml"
-                        className="bg-white/10 border-white/20 text-white"
-                      />
+                                              <Input
+                          value={state.rss?.url || ""}
+                          onChange={e => updateState('rss.url', e.target.value)}
+                          placeholder="https://example.com/feed.xml"
+                          className="bg-white/10 border-white/20 text-white"
+                        />
                     </div>
                     <div className="flex items-center justify-between">
                       <Label className="text-slate-300">Enable RSS Processing</Label>
                       <Switch
-                        checked={state.rss.enabled}
+                        checked={state.rss?.enabled || false}
                         onCheckedChange={checked => updateState('rss.enabled', checked)}
                       />
                     </div>
                     <div>
                       <Label className="text-slate-300">Update Interval (minutes)</Label>
                       <Slider
-                        value={[state.rss.updateInterval]}
+                        value={[state.rss?.updateInterval || 30]}
                         onValueChange={value => updateState('rss.updateInterval', value[0])}
                         max={120}
                         min={5}
                         step={5}
                         className="mt-2"
                       />
-                      <p className="text-sm text-slate-400 mt-1">{state.rss.updateInterval} minutes</p>
+                      <p className="text-sm text-slate-400 mt-1">{state.rss?.updateInterval || 30} minutes</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -823,14 +823,14 @@ export default function App() {
                     <div className="flex items-center justify-between">
                       <Label className="text-slate-300">Enable SMM Boosting</Label>
                       <Switch
-                        checked={state.nuclear.enabled}
+                        checked={state.nuclear?.enabled || false}
                         onCheckedChange={checked => updateState('nuclear.enabled', checked)}
                       />
                     </div>
                     <div>
                       <Label className="text-slate-300">API Key</Label>
                       <MaskedInput
-                        value={state.nuclear.apiKey}
+                        value={state.nuclear?.apiKey || ""}
                         onChange={value => updateState('nuclear.apiKey', value)}
                         placeholder="Enter your SMM Nuclear API key"
                       />
@@ -839,7 +839,7 @@ export default function App() {
                       <Label className="text-slate-300">Daily Budget ($)</Label>
                       <Input
                         type="number"
-                        value={state.nuclear.dailyBudget}
+                        value={state.nuclear?.dailyBudget || 50}
                         onChange={e => updateState('nuclear.dailyBudget', parseInt(e.target.value))}
                         className="bg-white/10 border-white/20 text-white"
                       />
@@ -851,11 +851,12 @@ export default function App() {
                           <div key={type} className="flex items-center space-x-2">
                             <input
                               type="checkbox"
-                              checked={state.nuclear.boostTypes.includes(type)}
+                              checked={state.nuclear?.boostTypes?.includes(type) || false}
                               onChange={e => {
+                                const currentTypes = state.nuclear?.boostTypes || [];
                                 const newTypes = e.target.checked
-                                  ? [...state.nuclear.boostTypes, type]
-                                  : state.nuclear.boostTypes.filter(t => t !== type);
+                                  ? [...currentTypes, type]
+                                  : currentTypes.filter(t => t !== type);
                                 updateState('nuclear.boostTypes', newTypes);
                               }}
                               className="rounded"
@@ -879,16 +880,16 @@ export default function App() {
                   <CardContent className="space-y-4">
                     <div>
                       <Label className="text-slate-300">Videos per Channel per Day</Label>
-                      <Input
-                        type="number"
-                        value={state.youtube.dailyPerChannel}
-                        onChange={e => updateState('youtube.dailyPerChannel', parseInt(e.target.value))}
-                        className="bg-white/10 border-white/20 text-white"
-                      />
+                                              <Input
+                          type="number"
+                          value={state.youtube?.dailyPerChannel || 2}
+                          onChange={e => updateState('youtube.dailyPerChannel', parseInt(e.target.value))}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
                     </div>
                     <div>
                       <Label className="text-slate-300">Aspect Ratio</Label>
-                      <Select value={state.creatify.aspect} onValueChange={value => updateState('creatify.aspect', value)}>
+                      <Select value={state.creatify?.aspect || "9:16"} onValueChange={value => updateState('creatify.aspect', value)}>
                         <SelectTrigger className="bg-white/10 border-white/20 text-white">
                           <SelectValue />
                         </SelectTrigger>
@@ -902,19 +903,19 @@ export default function App() {
                     <div>
                       <Label className="text-slate-300">Video Length (seconds)</Label>
                       <Slider
-                        value={[state.creatify.length]}
+                        value={[state.creatify?.length || 30]}
                         onValueChange={value => updateState('creatify.length', value[0])}
                         max={60}
                         min={15}
                         step={5}
                         className="mt-2"
                       />
-                      <p className="text-sm text-slate-400 mt-1">{state.creatify.length} seconds</p>
+                      <p className="text-sm text-slate-400 mt-1">{state.creatify?.length || 30} seconds</p>
                     </div>
                     <div className="flex items-center justify-between">
                       <Label className="text-slate-300">Disable Call-to-Action</Label>
                       <Switch
-                        checked={state.creatify.noCta}
+                        checked={state.creatify?.noCta || false}
                         onCheckedChange={checked => updateState('creatify.noCta', checked)}
                       />
                     </div>
