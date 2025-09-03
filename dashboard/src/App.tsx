@@ -84,8 +84,18 @@ export default function App() {
   const [state, setState] = useLocalStorageState(LS_KEY, () => ({
     timezone: "America/New_York",
     agents: [
-      { name: "Ava", personality: "Tech-savvy millennial", target: "tech enthusiasts" },
-      { name: "Maya", personality: "Creative professional", target: "design community" }
+      { 
+        name: "Ava", 
+        personality: "Tech-savvy millennial", 
+        target: "tech enthusiasts",
+        systemPrompt: "You are Ava, a Group Dealer Strategist with deep expertise in automotive SEO and digital marketing. You create sharp, analytical content that helps car dealers understand big-picture SEO strategies. Your content is data-driven, professional, and focuses on actionable insights for automotive businesses."
+      },
+      { 
+        name: "Maya", 
+        personality: "Creative professional", 
+        target: "design community",
+        systemPrompt: "You are Maya, an OEM Program Insider with extensive experience in automotive marketing and program management. You create professional, polished content that helps automotive professionals understand structured approaches to digital marketing. Your content is well-organized, comprehensive, and focuses on practical implementation strategies."
+      }
     ],
     rss: {
       url: "",
@@ -362,8 +372,8 @@ export default function App() {
                   </div>
                   <p className="text-sm text-slate-400">Creates YouTube Shorts using AI</p>
                   <div className="mt-2">
-                    <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
-                      {queue.length} in queue
+                    <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30">
+                      Creatify Disabled
                     </Badge>
                   </div>
                 </div>
@@ -429,9 +439,9 @@ export default function App() {
                 <Rss className="w-4 h-4 mr-2" />
                 RSS Feed
               </TabsTrigger>
-              <TabsTrigger value="channels" className="data-[state=active]:bg-white/20">
+              <TabsTrigger value="personas" className="data-[state=active]:bg-white/20">
                 <Users className="w-4 h-4 mr-2" />
-                Channels
+                Personas
               </TabsTrigger>
               <TabsTrigger value="analytics" className="data-[state=active]:bg-white/20">
                 <BarChart3 className="w-4 h-4 mr-2" />
@@ -565,11 +575,11 @@ export default function App() {
                       
                       <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                         <div className="flex items-center">
-                          <Video className="w-5 h-5 text-green-400 mr-3" />
+                          <Video className="w-5 h-5 text-orange-400 mr-3" />
                           <span>Video Generation</span>
                         </div>
-                        <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                          {queue.length} in queue
+                        <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30">
+                          Creatify Disabled
                         </Badge>
                       </div>
                       
@@ -603,86 +613,156 @@ export default function App() {
               <RSSArticles isProcessing={isRunning} />
             </TabsContent>
 
-            {/* Channels Tab */}
-            <TabsContent value="channels" className="mt-6">
+            {/* Personas Tab */}
+            <TabsContent value="personas" className="mt-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Channel A Setup */}
+                {/* Persona A (Ava) */}
                 <Card className="bg-white/10 border-white/20 text-white">
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <span className="flex items-center">
                         <Users className="w-5 h-5 mr-2 text-pink-400" />
-                        Channel A (Ava)
+                        Persona A (Ava)
                       </span>
-                      <Badge className={youtubeAuth.A ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}>
-                        {youtubeAuth.A ? 'Connected' : 'Not Connected'}
+                      <Badge className={youtubeAuth.A ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-orange-500/20 text-orange-300 border-orange-500/30'}>
+                        {youtubeAuth.A ? 'YouTube Connected' : 'YouTube Not Connected'}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div>
-                        <Label className="text-slate-300">Channel Name</Label>
+                        <Label className="text-slate-300">Persona Name</Label>
                         <Input
-                          value={state.youtube?.channels?.A?.name || ""}
-                          onChange={e => updateState('youtube.channels.A.name', e.target.value)}
+                          value={state.agents?.[0]?.name || "Ava"}
+                          onChange={e => updateState('agents.0.name', e.target.value)}
                           className="bg-white/10 border-white/20 text-white"
                         />
                       </div>
                       <div>
-                        <Label className="text-slate-300">Handle</Label>
+                        <Label className="text-slate-300">Personality</Label>
+                        <Input
+                          value={state.agents?.[0]?.personality || "Tech-savvy millennial"}
+                          onChange={e => updateState('agents.0.personality', e.target.value)}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Target Audience</Label>
+                        <Input
+                          value={state.agents?.[0]?.target || "tech enthusiasts"}
+                          onChange={e => updateState('agents.0.target', e.target.value)}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">System Prompt</Label>
+                        <Textarea
+                          value={state.agents?.[0]?.systemPrompt || "You are Ava, a Group Dealer Strategist with deep expertise in automotive SEO and digital marketing. You create sharp, analytical content that helps car dealers understand big-picture SEO strategies. Your content is data-driven, professional, and focuses on actionable insights for automotive businesses."}
+                          onChange={e => updateState('agents.0.systemPrompt', e.target.value)}
+                          className="bg-white/10 border-white/20 text-white min-h-[120px]"
+                          placeholder="Enter the system prompt for this persona..."
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">YouTube Channel Name</Label>
+                        <Input
+                          value={state.youtube?.channels?.A?.name || ""}
+                          onChange={e => updateState('youtube.channels.A.name', e.target.value)}
+                          className="bg-white/10 border-white/20 text-white"
+                          placeholder="Enter YouTube channel name"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">YouTube Handle</Label>
                         <Input
                           value={state.youtube?.channels?.A?.handle || ""}
                           onChange={e => updateState('youtube.channels.A.handle', e.target.value)}
                           className="bg-white/10 border-white/20 text-white"
+                          placeholder="@channelhandle"
                         />
                       </div>
                       <Button
                         onClick={() => initiateYouTubeOAuth('A')}
                         className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white border-0"
                       >
-                        {youtubeAuth.A ? 'Reconnect YouTube' : 'Connect YouTube'}
+                        {youtubeAuth.A ? 'Reconnect YouTube' : 'Connect YouTube Channel'}
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Channel B Setup */}
+                {/* Persona B (Maya) */}
                 <Card className="bg-white/10 border-white/20 text-white">
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <span className="flex items-center">
                         <Users className="w-5 h-5 mr-2 text-blue-400" />
-                        Channel B (Maya)
+                        Persona B (Maya)
                       </span>
-                      <Badge className={youtubeAuth.B ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}>
-                        {youtubeAuth.B ? 'Connected' : 'Not Connected'}
+                      <Badge className={youtubeAuth.B ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-orange-500/20 text-orange-300 border-orange-500/30'}>
+                        {youtubeAuth.B ? 'YouTube Connected' : 'YouTube Not Connected'}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div>
-                        <Label className="text-slate-300">Channel Name</Label>
+                        <Label className="text-slate-300">Persona Name</Label>
                         <Input
-                          value={state.youtube?.channels?.B?.name || ""}
-                          onChange={e => updateState('youtube.channels.B.name', e.target.value)}
+                          value={state.agents?.[1]?.name || "Maya"}
+                          onChange={e => updateState('agents.1.name', e.target.value)}
                           className="bg-white/10 border-white/20 text-white"
                         />
                       </div>
                       <div>
-                        <Label className="text-slate-300">Handle</Label>
+                        <Label className="text-slate-300">Personality</Label>
+                        <Input
+                          value={state.agents?.[1]?.personality || "Creative professional"}
+                          onChange={e => updateState('agents.1.personality', e.target.value)}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Target Audience</Label>
+                        <Input
+                          value={state.agents?.[1]?.target || "design community"}
+                          onChange={e => updateState('agents.1.target', e.target.value)}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">System Prompt</Label>
+                        <Textarea
+                          value={state.agents?.[1]?.systemPrompt || "You are Maya, an OEM Program Insider with extensive experience in automotive marketing and program management. You create professional, polished content that helps automotive professionals understand structured approaches to digital marketing. Your content is well-organized, comprehensive, and focuses on practical implementation strategies."}
+                          onChange={e => updateState('agents.1.systemPrompt', e.target.value)}
+                          className="bg-white/10 border-white/20 text-white min-h-[120px]"
+                          placeholder="Enter the system prompt for this persona..."
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">YouTube Channel Name</Label>
+                        <Input
+                          value={state.youtube?.channels?.B?.name || ""}
+                          onChange={e => updateState('youtube.channels.B.name', e.target.value)}
+                          className="bg-white/10 border-white/20 text-white"
+                          placeholder="Enter YouTube channel name"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">YouTube Handle</Label>
                         <Input
                           value={state.youtube?.channels?.B?.handle || ""}
                           onChange={e => updateState('youtube.channels.B.handle', e.target.value)}
                           className="bg-white/10 border-white/20 text-white"
+                          placeholder="@channelhandle"
                         />
                       </div>
                       <Button
                         onClick={() => initiateYouTubeOAuth('B')}
                         className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0"
                       >
-                        {youtubeAuth.B ? 'Reconnect YouTube' : 'Connect YouTube'}
+                        {youtubeAuth.B ? 'Reconnect YouTube' : 'Connect YouTube Channel'}
                       </Button>
                     </div>
                   </CardContent>
@@ -934,12 +1014,22 @@ export default function App() {
                 {/* Video Generation Settings */}
                 <Card className="bg-white/10 border-white/20 text-white">
                   <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Video className="w-5 h-5 mr-2 text-green-400" />
-                      Video Generation Settings
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center">
+                        <Video className="w-5 h-5 mr-2 text-green-400" />
+                        Video Generation Settings
+                      </span>
+                      <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30">
+                        Creatify Disabled
+                      </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                      <p className="text-sm text-orange-300">
+                        <strong>Creatify API not configured:</strong> Add CREATIFY_API_ID and CREATIFY_API_KEY environment variables to enable video generation.
+                      </p>
+                    </div>
                     <div>
                       <Label className="text-slate-300">Videos per Channel per Day</Label>
                                               <Input
