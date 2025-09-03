@@ -1,18 +1,12 @@
 {
-  "name": "nuclear-scheduler-functions",
-  "version": "1.0.0",
-  "description": "Netlify Functions for Nuclear YouTube Scheduler",
-  "main": "index.js",
+  "name": "nuclear-functions",
+  "private": true,
+  "type": "module",
   "dependencies": {
-    "@netlify/functions": "^2.0.0",
-    "@netlify/blobs": "^1.0.0",
-    "googleapis": "^128.0.0",
-    "axios": "^1.6.0",
+    "googleapis": "^131.0.0",
+    "axios": "^1.7.5",
     "xml2js": "^0.6.2",
-    "openai": "^4.20.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
+    "@netlify/blobs": "^6.4.0",
+    "openai": "^4.59.0"
   }
 }
