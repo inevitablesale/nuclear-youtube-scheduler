@@ -186,6 +186,9 @@ export default function App() {
       const newState = { ...prev };
       let current = newState;
       for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]] || typeof current[keys[i]] !== 'object') {
+          current[keys[i]] = {};
+        }
         current[keys[i]] = { ...current[keys[i]] };
         current = current[keys[i]];
       }
@@ -610,7 +613,7 @@ export default function App() {
                       <div>
                         <Label className="text-slate-300">Channel Name</Label>
                         <Input
-                          value={state.youtube.channels.A.name}
+                          value={state.youtube?.channels?.A?.name || ""}
                           onChange={e => updateState('youtube.channels.A.name', e.target.value)}
                           className="bg-white/10 border-white/20 text-white"
                         />
@@ -618,7 +621,7 @@ export default function App() {
                       <div>
                         <Label className="text-slate-300">Handle</Label>
                         <Input
-                          value={state.youtube.channels.A.handle}
+                          value={state.youtube?.channels?.A?.handle || ""}
                           onChange={e => updateState('youtube.channels.A.handle', e.target.value)}
                           className="bg-white/10 border-white/20 text-white"
                         />
@@ -651,7 +654,7 @@ export default function App() {
                       <div>
                         <Label className="text-slate-300">Channel Name</Label>
                         <Input
-                          value={state.youtube.channels.B.name}
+                          value={state.youtube?.channels?.B?.name || ""}
                           onChange={e => updateState('youtube.channels.B.name', e.target.value)}
                           className="bg-white/10 border-white/20 text-white"
                         />
@@ -659,7 +662,7 @@ export default function App() {
                       <div>
                         <Label className="text-slate-300">Handle</Label>
                         <Input
-                          value={state.youtube.channels.B.handle}
+                          value={state.youtube?.channels?.B?.handle || ""}
                           onChange={e => updateState('youtube.channels.B.handle', e.target.value)}
                           className="bg-white/10 border-white/20 text-white"
                         />

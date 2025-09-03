@@ -113,10 +113,10 @@ export function AdvancedAnalytics({ channel, channelName }: AdvancedAnalyticsPro
   // Process shorts data for leaderboard
   const processedShortsData = Array.isArray(shortsData) ? shortsData.map((short: any) => ({
     ...short,
-    title: short.title?.replace('#shorts', '').trim() || 'Untitled',
-    views: short.views || 0,
-    likes: short.likes || 0,
-    comments: short.comments || 0
+    title: (short && typeof short === 'object' && short.title) ? short.title.replace('#shorts', '').trim() : 'Untitled',
+    views: (short && typeof short === 'object' && short.views) ? short.views : 0,
+    likes: (short && typeof short === 'object' && short.likes) ? short.likes : 0,
+    comments: (short && typeof short === 'object' && short.comments) ? short.comments : 0
   })).slice(0, 5) : [];
 
   const COLORS = {
