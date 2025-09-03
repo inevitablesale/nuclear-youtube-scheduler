@@ -1,24 +1,39 @@
 import type { Handler } from "@netlify/functions";
-import { getStore } from "@netlify/blobs";
 import { google } from "googleapis";
+import { getStore } from "@netlify/blobs";
+
+function buildRedirectUrl(event: any) {
+  const host = event.headers["x-forwarded-host"] || event.headers.host;
+  const proto = (event.headers["x-forwarded-proto"] || "https").split(",")[0].trim();
+  return `${proto}://${host}/.netlify/functions/oauth2callback`;
+}
 
 export const handler: Handler = async (event) => {
   const code = event.queryStringParameters?.code;
   const channel = (event.queryStringParameters?.state || "A").toUpperCase();
-  if (!code) return { statusCode: 400, body: "Missing code" };
+  try {
+    if (!code) return { statusCode: 400, body: "Missing code" };
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      return { statusCode: 500, body: "Missing GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET" };
+    }
 
-  const oAuth2 = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID!,
-    process.env.GOOGLE_CLIENT_SECRET!,
-    `${process.env.URL}/.netlify/functions/oauth2callback`
-  );
+    const redirectUri = buildRedirectUrl(event);
+    const oAuth2 = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID!,
+      process.env.GOOGLE_CLIENT_SECRET!,
+      redirectUri
+    );
+    const { tokens } = await oAuth2.getToken(code);
+    if (!tokens.refresh_token) {
+      return { statusCode: 400, body: "No refresh_token; re-run connect (prompt=consent)" };
+    }
 
-  const { tokens } = await oAuth2.getToken(code);
-  const refresh = tokens.refresh_token;
-  if (!refresh) return { statusCode: 400, body: "No refresh_token; run again (we force prompt=consent)" };
+    const store = await getStore("nuclear-oauth-refresh");
+    await store.setJSON(channel, { refresh_token: tokens.refresh_token, at: new Date().toISOString() });
 
-  const store = await getStore("nuclear-oauth-refresh");
-  await store.setJSON(channel, { refresh_token: refresh, at: new Date().toISOString() });
-
-  return { statusCode: 200, body: `OK – saved refresh token for channel ${channel}. You can close this tab.` };
+    return { statusCode: 200, body: `OK – saved refresh token for channel ${channel}. You can close this tab.` };
+  } catch (e: any) {
+    console.error("oauth2callback error:", e?.response?.data || e?.message || e);
+    return { statusCode: 500, body: String(e?.response?.data || e?.message || "oauth2callback error") };
+  }
 };
