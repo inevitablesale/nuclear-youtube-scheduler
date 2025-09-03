@@ -230,7 +230,15 @@ class ApiClient {
   async getAuthStatus() {
     try {
       const response = await fetch('/.netlify/functions/auth-status');
-      return await response.json();
+      const data = await response.json().catch(() => ({}));
+      
+      // Handle the new response format from auth-status function
+      const authorized = data?.authorized ?? { A: false, B: false };
+      
+      return {
+        channelA: { authorized: authorized.A },
+        channelB: { authorized: authorized.B }
+      };
     } catch (error) {
       console.error('Get auth status error:', error);
       return {
@@ -250,15 +258,24 @@ class ApiClient {
   async fetchStatus() {
     try {
       const response = await fetch('/.netlify/functions/status');
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
+      
+      // Handle the response format from status function
+      const lastRun = data?.lastRun ?? { at: null, items: [] };
+      
       return {
-        lastRun: data.lastRun?.at || "never",
-        itemsCount: data.lastRun?.items?.length || 0,
-        items: data.lastRun?.items || []
+        lastRun: lastRun.at || "never",
+        itemsCount: lastRun.items?.length || 0,
+        items: lastRun.items || []
       };
     } catch (error) {
       console.error('Fetch status error:', error);
-      throw new Error('Failed to fetch status');
+      // Return safe defaults instead of throwing
+      return {
+        lastRun: "never",
+        itemsCount: 0,
+        items: []
+      };
     }
   }
 
